@@ -3,85 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fietshub Scanner App</title>
-    
+    <title>Fietshub Voice Labels</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#007bff">
-
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    
     <style>
-        :root { --blue: #007bff; --green: #28a745; }
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
+        :root { --blue: #007bff; --green: #28a745; --red: #dc3545; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 100px; }
+        header { background: var(--blue); color: white; padding: 15px; text-align: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* Camera View */
-        .v-container { position: sticky; top: 0; width: 100%; height: 200px; background: #000; overflow: hidden; z-index: 10; border-bottom: 3px solid var(--blue); }
-        #video { width: 100%; height: 100%; object-fit: cover; }
-        .overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 220px; height: 98px; border: 2.5px solid var(--blue); border-radius: 5px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); pointer-events: none; }
+        .controls { padding: 15px; max-width: 800px; margin: auto; }
+        .input-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
         
-        #status { text-align: center; font-weight: bold; font-size: 13px; color: var(--blue); padding: 10px; background: white; margin: 0; }
-
-        /* Input Matrix */
-        .controls { padding: 10px; max-width: 900px; margin: auto; }
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 10px; }
-        .row { background: white; padding: 10px; border-radius: 12px; display: flex; align-items: center; gap: 6px; border: 2px solid #ddd; cursor: pointer; transition: 0.2s; }
-        .active-row { border-color: var(--blue); background: #eef6ff; box-shadow: 0 0 10px rgba(0,123,255,0.15); }
+        .row { background: white; padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #ddd; position: relative; }
+        .row-header { display: flex; justify-content: space-between; align-items: center; }
         
-        select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 11px; font-weight: bold; width: 115px; background: #f8f8f8; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; flex: 1; min-width: 0; }
-        .code-in { max-width: 80px; font-weight: bold; color: #333; }
+        select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 140px; background: #f8f8f8; }
+        .inputs-flex { display: flex; gap: 8px; }
+        input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; flex: 1; min-width: 0; }
+        .code-in { max-width: 100px; font-weight: bold; }
 
-        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 80%; max-width: 300px; cursor: pointer; }
+        /* Voice Button */
+        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 20px; }
+        .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* Kleur Thema's */
-        .c-ebike { --c: #FFD700; --tc: #000; }
-        .c-v3    { --c: #FF8C00; --tc: #fff; }
-        .c-schijf { --c: #D32F2F; --tc: #fff; }
-        .c-velg   { --c: #EF5350; --tc: #fff; }
-        .c-stuur  { --c: #1976D2; --tc: #fff; }
-        .c-trans  { --c: #388E3C; --tc: #fff; }
-        .c-acc    { --c: #455A64; --tc: #fff; }
-        .c-fit    { --c: #EC407A; --tc: #fff; }
+        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; }
 
-        @media print { 
-            .v-container, .controls, .btn-print, #status { display: none !important; }
+        /* Print Layout (Gelijk aan voorheen) */
+        @media print {
+            .controls, .btn-print, header { display: none !important; }
             @page { size: A4; margin: 0; }
             .grid { display: grid !important; grid-template-columns: 10cm 10cm; grid-template-rows: repeat(4, 6cm); width: 20cm; margin: 0 auto; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .label { width: 10cm; height: 6cm; border: 0.1pt solid #eee; display: flex; flex-direction: column; justify-content: space-between; padding: 22px; box-sizing: border-box; text-transform: uppercase; background-color: var(--c) !important; color: var(--tc) !important; }
-            .cat-n { font-size: 12pt; font-weight: bold; opacity: 0.8; }
-            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 24pt; font-weight: 900; text-align: center; }
+            .label { width: 10cm; height: 6cm; display: flex; flex-direction: column; justify-content: space-between; padding: 25px; box-sizing: border-box; text-transform: uppercase; border: 0.1pt solid #eee; }
+            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 26pt; font-weight: 900; text-align: center; }
             .itm-c { align-self: flex-end; background: white; color: black; padding: 6px 12px; font-size: 14pt; font-weight: bold; border: 1px solid #000; }
         }
         .grid { display: none; }
+        /* Categorie kleuren */
+        .c-ebike { background-color: #FFD700 !important; color: #000; }
+        .c-v3 { background-color: #FF8C00 !important; color: #fff; }
+        .c-schijf { background-color: #D32F2F !important; color: #fff; }
+        .c-velg { background-color: #EF5350 !important; color: #fff; }
+        .c-stuur { background-color: #1976D2 !important; color: #fff; }
+        .c-trans { background-color: #388E3C !important; color: #fff; }
+        .c-acc { background-color: #455A64 !important; color: #fff; }
+        .c-fit { background-color: #EC407A !important; color: #fff; }
     </style>
 </head>
 <body>
 
-<div class="v-container">
-    <video id="video" autoplay playsinline></video>
-    <div class="overlay"></div>
-</div>
-<p id="status">Laden...</p>
+<header>FIETSHUB VOICE LABELS</header>
 
 <div class="controls">
-    <div class="input-grid" id="mainGrid">
+    <div class="input-grid">
         <script>
             const catList = {
                 "ebike": "E-BIKE", "v3": "E-BIKE V3", "schijf": "SCHIJFREM", 
                 "velg": "VELGREM", "stuur": "STUUR", "trans": "TRANSMISSIE", 
                 "acc": "ACCESSORIES", "fit": "FITNESS"
             };
-            const defaultKeys = Object.keys(catList);
+            const keys = Object.keys(catList);
             for(let i=1; i<=8; i++) {
                 document.write(`
-                    <div class="row ${i===1?'active-row':''}" id="row-${i}" onclick="setTarget(${i})">
-                        <select id="sel-${i}">
-                            ${Object.entries(catList).map(([k,v]) => `<option value="${k}" ${k===defaultKeys[i-1]?'selected':''}>${v}</option>`).join('')}
-                        </select>
-                        <input type="text" id="i-${i}" placeholder="Product...">
-                        <input type="text" id="c-${i}" class="code-in" placeholder="Code">
+                    <div class="row" id="row-${i}">
+                        <div class="row-header">
+                            <select id="sel-${i}">
+                                ${Object.entries(catList).map(([k,v]) => `<option value="${k}" ${k===keys[i-1]?'selected':''}>${v}</option>`).join('')}
+                            </select>
+                            <button class="mic-btn" onclick="startVoice(${i})" id="mic-${i}">🎤</button>
+                        </div>
+                        <div class="inputs-flex">
+                            <input type="text" id="i-${i}" placeholder="Zeg productnaam...">
+                            <input type="text" id="c-${i}" class="code-in" placeholder="Code">
+                        </div>
                     </div>
                 `);
             }
@@ -96,7 +90,7 @@
         for(let i=1; i<=8; i++) {
             document.write(`
                 <div class="label" id="label-${i}">
-                    <span class="cat-n" id="o-cat-${i}"></span>
+                    <span style="font-weight:bold; font-size:12pt; opacity:0.8;" id="o-cat-${i}"></span>
                     <div class="itm-n" id="o-name-${i}"></div>
                     <div class="itm-c" id="o-code-${i}"></div>
                 </div>
@@ -105,53 +99,44 @@
     </script>
 </div>
 
-<canvas id="canvas" style="display:none;"></canvas>
-
 <script>
-    let activeIdx = 1;
-    const video = document.getElementById('video');
-    const status = document.getElementById('status');
-    let isBusy = false;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    function startVoice(id) {
+        if (!SpeechRecognition) {
+            alert("Spraakherkenning wordt niet ondersteund door deze browser. Gebruik Chrome op Android.");
+            return;
+        }
 
-    // Service Worker registratie voor PWA (app)
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'nl-NL';
+        const micBtn = document.getElementById('mic-' + id);
+        
+        recognition.onstart = () => {
+            micBtn.classList.add('listening');
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            console.log("Gehoord:", transcript);
+            
+            // Logica om te splitsen als de technieker "Naam [pauze] Code" zegt
+            // Of we vullen gewoon de naam in.
+            document.getElementById('i-' + id).value = transcript.toUpperCase();
+            micBtn.classList.remove('listening');
+        };
+
+        recognition.onerror = () => {
+            micBtn.classList.remove('listening');
+            alert("Kon spraak niet horen. Probeer opnieuw.");
+        };
+
+        recognition.onend = () => {
+            micBtn.classList.remove('listening');
+        };
+
+        recognition.start();
     }
-
-    function setTarget(idx) {
-        activeIdx = idx;
-        document.querySelectorAll('.row').forEach(r => r.classList.remove('active-row'));
-        document.getElementById('row-' + idx).classList.add('active-row');
-        status.innerText = "Focus op rij " + idx;
-    }
-
-    async function startApp() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            video.srcObject = stream;
-            const worker = await Tesseract.createWorker('nld');
-            status.innerText = "Scanner Klaar";
-
-            setInterval(async () => {
-                if (isBusy) return;
-                isBusy = true;
-                const canvas = document.getElementById('canvas');
-                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                const { data: { text } } = await worker.recognize(canvas);
-                
-                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3);
-                if (lines.length > 0) {
-                    const name = lines.find(l => l.match(/CHARGER|36V|SPEED|BATTER|BRAKE|STUUR/i));
-                    const code = text.match(/\b\d{7}\b/);
-                    if (name) document.getElementById('i-' + activeIdx).value = name;
-                    if (code) document.getElementById('c-' + activeIdx).value = code[0];
-                }
-                isBusy = false;
-            }, 1300);
-        } catch (e) { status.innerText = "Fout: Gebruik HTTPS link"; }
-    }
-    startApp();
 
     function doPrint() {
         for(let i=1; i<=8; i++) {
