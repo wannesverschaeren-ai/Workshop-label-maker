@@ -3,33 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fietshub Voice Labels</title>
+    <title>Fietshub Voice-to-Label</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root { --blue: #007bff; --green: #28a745; --red: #dc3545; }
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 100px; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 120px; }
         header { background: var(--blue); color: white; padding: 15px; text-align: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        .controls { padding: 15px; max-width: 800px; margin: auto; }
-        .input-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .controls { padding: 10px; max-width: 800px; margin: auto; }
+        .input-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         
-        .row { background: white; padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #ddd; position: relative; }
-        .row-header { display: flex; justify-content: space-between; align-items: center; }
+        .row { background: white; padding: 15px; border-radius: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .row-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 8px; }
         
-        select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 140px; background: #f8f8f8; }
-        .inputs-flex { display: flex; gap: 8px; }
-        input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; flex: 1; min-width: 0; }
-        .code-in { max-width: 100px; font-weight: bold; }
-
-        /* Voice Button */
-        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size: 20px; }
-        .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.5s infinite; }
+        select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 150px; background: #f8f8f8; font-size: 14px; }
         
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .input-wrapper { display: flex; align-items: center; gap: 10px; width: 100%; }
+        input { padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; flex: 1; min-width: 0; outline: none; }
+        input:focus { border-color: var(--blue); }
+        
+        /* Mic Buttons */
+        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; font-size: 18px; flex-shrink: 0; }
+        .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; }
+        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 400px; }
 
-        /* Print Layout (Gelijk aan voorheen) */
+        /* Print Layout (A4) */
         @media print {
             .controls, .btn-print, header { display: none !important; }
             @page { size: A4; margin: 0; }
@@ -39,7 +40,6 @@
             .itm-c { align-self: flex-end; background: white; color: black; padding: 6px 12px; font-size: 14pt; font-weight: bold; border: 1px solid #000; }
         }
         .grid { display: none; }
-        /* Categorie kleuren */
         .c-ebike { background-color: #FFD700 !important; color: #000; }
         .c-v3 { background-color: #FF8C00 !important; color: #fff; }
         .c-schijf { background-color: #D32F2F !important; color: #fff; }
@@ -52,7 +52,7 @@
 </head>
 <body>
 
-<header>FIETSHUB VOICE LABELS</header>
+<header>FIETSHUB VOICE-TO-LABEL</header>
 
 <div class="controls">
     <div class="input-grid">
@@ -70,11 +70,17 @@
                             <select id="sel-${i}">
                                 ${Object.entries(catList).map(([k,v]) => `<option value="${k}" ${k===keys[i-1]?'selected':''}>${v}</option>`).join('')}
                             </select>
-                            <button class="mic-btn" onclick="startVoice(${i})" id="mic-${i}">🎤</button>
+                            <span style="font-size: 11px; color: #999;">RIJ ${i}</span>
                         </div>
-                        <div class="inputs-flex">
+                        
+                        <div class="input-wrapper">
                             <input type="text" id="i-${i}" placeholder="Zeg productnaam...">
-                            <input type="text" id="c-${i}" class="code-in" placeholder="Code">
+                            <button class="mic-btn" onclick="startSpeech(${i}, 'name')" id="mic-n-${i}">🎤</button>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <input type="text" id="c-${i}" style="font-weight:bold;" placeholder="Zeg itemcode...">
+                            <button class="mic-btn" onclick="startSpeech(${i}, 'code')" id="mic-c-${i}">🔢</button>
                         </div>
                     </div>
                 `);
@@ -101,39 +107,40 @@
 
 <script>
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    function startVoice(id) {
+
+    function startSpeech(id, targetType) {
         if (!SpeechRecognition) {
-            alert("Spraakherkenning wordt niet ondersteund door deze browser. Gebruik Chrome op Android.");
+            alert("Browser niet ondersteund. Gebruik Chrome op Android.");
             return;
         }
 
         const recognition = new SpeechRecognition();
         recognition.lang = 'nl-NL';
-        const micBtn = document.getElementById('mic-' + id);
+        const btnId = targetType === 'name' ? 'mic-n-' + id : 'mic-c-' + id;
+        const inputId = targetType === 'name' ? 'i-' + id : 'c-' + id;
+        const micBtn = document.getElementById(btnId);
         
-        recognition.onstart = () => {
-            micBtn.classList.add('listening');
-        };
+        recognition.onstart = () => micBtn.classList.add('listening');
 
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            console.log("Gehoord:", transcript);
+            let result = event.results[0][0].transcript;
             
-            // Logica om te splitsen als de technieker "Naam [pauze] Code" zegt
-            // Of we vullen gewoon de naam in.
-            document.getElementById('i-' + id).value = transcript.toUpperCase();
+            if (targetType === 'code') {
+                // Code opschonen: spaties weg, "streepje" wordt "-", letters naar hoofdletters
+                result = result.toLowerCase()
+                               .replace(/streepje/g, '-')
+                               .replace(/\s+/g, '')
+                               .toUpperCase();
+            } else {
+                result = result.toUpperCase();
+            }
+
+            document.getElementById(inputId).value = result;
             micBtn.classList.remove('listening');
         };
 
-        recognition.onerror = () => {
-            micBtn.classList.remove('listening');
-            alert("Kon spraak niet horen. Probeer opnieuw.");
-        };
-
-        recognition.onend = () => {
-            micBtn.classList.remove('listening');
-        };
+        recognition.onerror = () => micBtn.classList.remove('listening');
+        recognition.onend = () => micBtn.classList.remove('listening');
 
         recognition.start();
     }
