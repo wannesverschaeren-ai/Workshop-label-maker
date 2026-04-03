@@ -3,64 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fietshub Label Matrix 2x6</title>
+    <title>Fietshub Label Tool</title>
     <style>
         :root { --blue: #007bff; --green: #28a745; --red: #dc3545; }
         body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 120px; }
         header { background: var(--blue); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; }
         
+        /* Interface Styles */
         .controls { padding: 10px; max-width: 1000px; margin: auto; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
         .row { background: white; padding: 10px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #ddd; }
         .row-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        select { padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 140px; background: #f8f8f8; font-size: 13px; }
+        select { padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 140px; }
         .input-wrapper { display: flex; align-items: center; gap: 8px; }
-        input { padding: 10px; border: 2px solid #eee; border-radius: 8px; font-size: 14px; flex: 1; outline: none; }
-        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; flex: 1; outline: none; }
+        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+        .mic-btn.listening { background: var(--red); color: white; }
         
-        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 400px; cursor: pointer; }
+        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 200; width: 85%; max-width: 400px; cursor: pointer; }
 
-        /* PRINT LAYOUT - GEOPTIMALISEERD VOOR 1 PAGINA */
+        /* PRINT STYLES */
         #printGrid { display: none; }
 
         @media print {
-            .controls, .btn-print, header { display: none !important; }
-            @page { 
-                size: A4 portrait; 
-                margin: 0.5cm; /* Kleine marge helpt browsers om alles op 1 vel te houden */
-            }
-            html, body { margin: 0; padding: 0; background: white; height: auto; }
+            header, .controls, .btn-print { display: none !important; }
+            @page { size: A4 portrait; margin: 0; }
+            html, body { margin: 0; padding: 0; background: white; width: 210mm; height: 297mm; }
             
             #printGrid { 
                 display: grid !important; 
-                grid-template-columns: 9.5cm 9.5cm; /* Iets smaller voor zijmarges */
-                grid-template-rows: repeat(6, 4.6cm); /* Totaal 27.6cm (veilig voor A4) */
-                width: 19cm; 
-                margin: 0 auto;
+                grid-template-columns: 105mm 105mm; 
+                grid-template-rows: repeat(6, 48mm); /* 6 x 48mm = 288mm (past op A4 van 297mm) */
+                width: 210mm; 
+                height: 288mm;
+                margin: 0;
                 padding: 0;
-                gap: 0;
                 -webkit-print-color-adjust: exact !important; 
                 print-color-adjust: exact !important; 
             }
             .label { 
-                width: 9.5cm; 
-                height: 4.6cm; 
+                width: 105mm; 
+                height: 48mm; 
                 display: flex; 
                 flex-direction: column; 
                 justify-content: space-between; 
-                padding: 10px 15px; 
+                padding: 15px; 
                 box-sizing: border-box; 
                 text-transform: uppercase; 
-                border: 0.1pt solid #ddd;
+                border: 0.1px solid #eee;
                 break-inside: avoid;
             }
             .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 18pt; font-weight: 900; text-align: center; line-height: 1.1; }
             .itm-c { align-self: flex-end; background: white; color: black; padding: 2px 8px; font-size: 11pt; font-weight: bold; border: 1px solid #000; }
         }
 
-        /* Kleur Klassen */
+        /* Kleur Thema's */
         .c-ebike { background-color: #FFD700 !important; color: #000; }
         .c-v3 { background-color: #FF8C00 !important; color: #fff; }
         .c-schijf { background-color: #D32F2F !important; color: #fff; }
@@ -73,33 +70,29 @@
 </head>
 <body>
 
-<header>FIETSHUB LABELS (2x6)</header>
+<header>FIETSHUB LABELS</header>
 
 <div class="controls">
     <div class="input-grid">
         <script>
-            const catList = {
-                "ebike": "E-BIKE", "v3": "E-BIKE V3", "schijf": "SCHIJFREM", 
-                "velg": "VELGREM", "stuur": "STUUR", "trans": "TRANSMISSIE", 
-                "acc": "ACCESSORIES", "fit": "FITNESS"
-            };
-            const keys = Object.keys(catList);
+            const catNames = ["E-BIKE", "E-BIKE V3", "SCHIJFREM", "VELGREM", "STUUR", "TRANSMISSIE", "ACCESSORIES", "FITNESS"];
+            const catKeys = ["ebike", "v3", "schijf", "velg", "stuur", "trans", "acc", "fit"];
             for(let i=1; i<=12; i++) {
-                const defaultCat = keys[(i-1) % keys.length];
+                const k = catKeys[(i-1) % 8];
                 document.write(`
                     <div class="row">
                         <div class="row-header">
                             <select id="sel-${i}">
-                                ${Object.entries(catList).map(([k,v]) => `<option value="${k}" ${k===defaultCat?'selected':''}>${v}</option>`).join('')}
+                                ${catKeys.map((key, idx) => `<option value="${key}" ${key===k?'selected':''}>${catNames[idx]}</option>`).join('')}
                             </select>
-                            <span style="font-size: 10px; color: #bbb;">LABEL ${i}</span>
+                            <span style="font-size: 10px;">L${i}</span>
                         </div>
                         <div class="input-wrapper">
-                            <input type="text" id="i-${i}" placeholder="Naam (🎤)">
+                            <input type="text" id="i-${i}" placeholder="Productnaam">
                             <button class="mic-btn" onclick="startSpeech(${i}, 'name')" id="mic-n-${i}">🎤</button>
                         </div>
                         <div class="input-wrapper">
-                            <input type="text" id="c-${i}" style="font-weight:bold;" placeholder="Code (🔢)">
+                            <input type="text" id="c-${i}" style="font-weight:bold;" placeholder="Code">
                             <button class="mic-btn" onclick="startSpeech(${i}, 'code')" id="mic-c-${i}">🔢</button>
                         </div>
                     </div>
@@ -109,7 +102,7 @@
     </div>
 </div>
 
-<button class="btn-print" onclick="doPrint()">PDF MAKEN</button>
+<button class="btn-print" id="printBtn">MAAK PDF / PRINT</button>
 
 <div id="printGrid">
     <script>
@@ -129,42 +122,33 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     function startSpeech(id, targetType) {
-        if (!SpeechRecognition) {
-            alert("Browser niet ondersteund. Gebruik Chrome.");
-            return;
-        }
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'nl-NL';
-        const micBtn = document.getElementById(targetType === 'name' ? 'mic-n-' + id : 'mic-c-' + id);
-        
-        recognition.onstart = () => micBtn.classList.add('listening');
-        recognition.onresult = (event) => {
-            let result = event.results[0][0].transcript;
-            if (targetType === 'code') {
-                result = result.toLowerCase().replace(/streepje/g, '-').replace(/\s+/g, '').toUpperCase();
-            } else {
-                result = result.toUpperCase();
-            }
-            document.getElementById(targetType === 'name' ? 'i-' + id : 'c-' + id).value = result;
+        if (!SpeechRecognition) return alert("Chrome gebruiken aub.");
+        const rec = new SpeechRecognition();
+        rec.lang = 'nl-NL';
+        rec.onstart = () => document.getElementById(targetType === 'name' ? 'mic-n-'+id : 'mic-c-'+id).classList.add('listening');
+        rec.onresult = (e) => {
+            let res = e.results[0][0].transcript;
+            if(targetType === 'code') res = res.toLowerCase().replace(/streepje/g, '-').replace(/\s+/g, '').toUpperCase();
+            else res = res.toUpperCase();
+            document.getElementById(targetType === 'name' ? 'i-'+id : 'c-'+id).value = res;
         };
-        recognition.onend = () => micBtn.classList.remove('listening');
-        recognition.start();
+        rec.onend = () => document.querySelectorAll('.mic-btn').forEach(b => b.classList.remove('listening'));
+        rec.start();
     }
 
-    function doPrint() {
+    document.getElementById('printBtn').addEventListener('click', function() {
         for(let i=1; i<=12; i++) {
             const sel = document.getElementById('sel-' + i);
             const label = document.getElementById('label-' + i);
             label.className = 'label c-' + sel.value;
             document.getElementById('o-cat-' + i).innerText = sel.options[sel.selectedIndex].text;
-            document.getElementById('o-name-' + i).innerText = document.getElementById('i-' + i).value || "";
+            document.getElementById('o-name-' + i).innerText = document.getElementById('i-' + i).value;
             const cVal = document.getElementById('c-' + i).value;
-            const codeBox = document.getElementById('o-code-' + i);
-            codeBox.innerText = cVal || "";
-            codeBox.style.display = cVal ? 'block' : 'none';
+            document.getElementById('o-code-' + i).innerText = cVal;
+            document.getElementById('o-code-' + i).style.display = cVal ? 'block' : 'none';
         }
-        setTimeout(() => { window.print(); }, 150);
-    }
+        window.print();
+    });
 </script>
 </body>
 </html>
