@@ -2,105 +2,162 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <title>Label Tool v3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fietshub Voice-to-Label</title>
+    <link rel="manifest" href="manifest.json">
     <style>
-        /* Schermweergave */
-        body { font-family: sans-serif; padding: 10px; background: #eee; }
-        .box { background: white; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ccc; }
-        input { width: 60%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; }
-        .mic { padding: 8px; cursor: pointer; background: #f0f0f0; border: 1px solid #ccc; }
+        :root { --blue: #007bff; --green: #28a745; --red: #dc3545; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 120px; }
+        header { background: var(--blue); color: white; padding: 15px; text-align: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* De Grote Print Knop */
-        #p-btn { 
-            position: fixed; bottom: 20px; left: 10%; width: 80%; 
-            padding: 20px; background: #28a745; color: white; 
-            font-size: 20px; font-weight: bold; border: none; border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999;
-        }
+        .controls { padding: 10px; max-width: 800px; margin: auto; }
+        .input-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        
+        .row { background: white; padding: 15px; border-radius: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .row-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        
+        select { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 150px; background: #f8f8f8; font-size: 14px; }
+        
+        .input-wrapper { display: flex; align-items: center; gap: 10px; width: 100%; }
+        input { padding: 12px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; flex: 1; min-width: 0; outline: none; }
+        input:focus { border-color: var(--blue); }
+        
+        /* Mic Buttons */
+        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; font-size: 18px; flex-shrink: 0; }
+        .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* Print Instellingen */
-        #p-grid { display: none; }
+        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 400px; }
+
+        /* Print Layout (A4) */
         @media print {
-            body * { display: none !important; }
-            #p-grid { display: grid !important; grid-template-columns: 105mm 105mm; grid-template-rows: repeat(6, 49mm); width: 210mm; height: 294mm; margin: 0; padding: 0; }
-            .l { border: 0.1mm solid #000; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; text-transform: uppercase; box-sizing: border-box; }
-            .n { font-size: 20pt; font-weight: bold; text-align: center; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
-            .c { text-align: right; font-weight: bold; font-size: 14pt; }
-            
-            /* Kleuren dwingen */
-            .eb { background: #FFD700 !important; } .v3 { background: #FF8C00 !important; }
-            .sr { background: #D32F2F !important; color: white !important; } .vr { background: #EF5350 !important; }
-            .st { background: #1976D2 !important; color: white !important; } .tr { background: #388E3C !important; color: white !important; }
-            .ac { background: #455A64 !important; color: white !important; } .fi { background: #EC407A !important; color: white !important; }
+            .controls, .btn-print, header { display: none !important; }
+            @page { size: A4; margin: 0; }
+            .grid { display: grid !important; grid-template-columns: 10cm 10cm; grid-template-rows: repeat(4, 6cm); width: 20cm; margin: 0 auto; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .label { width: 10cm; height: 6cm; display: flex; flex-direction: column; justify-content: space-between; padding: 25px; box-sizing: border-box; text-transform: uppercase; border: 0.1pt solid #eee; }
+            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 26pt; font-weight: 900; text-align: center; }
+            .itm-c { align-self: flex-end; background: white; color: black; padding: 6px 12px; font-size: 14pt; font-weight: bold; border: 1px solid #000; }
         }
+        .grid { display: none; }
+        .c-ebike { background-color: #FFD700 !important; color: #000; }
+        .c-v3 { background-color: #FF8C00 !important; color: #fff; }
+        .c-schijf { background-color: #D32F2F !important; color: #fff; }
+        .c-velg { background-color: #EF5350 !important; color: #fff; }
+        .c-stuur { background-color: #1976D2 !important; color: #fff; }
+        .c-trans { background-color: #388E3C !important; color: #fff; }
+        .c-acc { background-color: #455A64 !important; color: #fff; }
+        .c-fit { background-color: #EC407A !important; color: #fff; }
     </style>
 </head>
 <body>
 
-    <h3>Vul labels in:</h3>
-    <div id="inputs">
+<header>FIETSHUB VOICE-TO-LABEL</header>
+
+<div class="controls">
+    <div class="input-grid">
         <script>
-            const cats = [["eb","E-BIKE"],["v3","V3"],["sr","SCHIJFREM"],["vr","VELGREM"],["st","STUUR"],["tr","TRANS"],["ac","ACC"],["fi","FIT"]];
-            for(let i=1; i<=12; i++) {
-                const c = cats[(i-1)%8];
+            const catList = {
+                "ebike": "E-BIKE", "v3": "E-BIKE V3", "schijf": "SCHIJFREM", 
+                "velg": "VELGREM", "stuur": "STUUR", "trans": "TRANSMISSIE", 
+                "acc": "ACCESSORIES", "fit": "FITNESS"
+            };
+            const keys = Object.keys(catList);
+            for(let i=1; i<=8; i++) {
                 document.write(`
-                    <div class="box">
-                        <strong>${c[1]} (Label ${i})</strong><br>
-                        <input type="text" id="i${i}" placeholder="Naam"> 
-                        <button class="mic" onclick="talk('i${i}')">🎤</button><br>
-                        <input type="text" id="c${i}" placeholder="Code">
-                        <button class="mic" onclick="talk('c${i}')">🔢</button>
-                        <input type="hidden" id="k${i}" value="${c[0]}">
-                        <input type="hidden" id="t${i}" value="${c[1]}">
+                    <div class="row" id="row-${i}">
+                        <div class="row-header">
+                            <select id="sel-${i}">
+                                ${Object.entries(catList).map(([k,v]) => `<option value="${k}" ${k===keys[i-1]?'selected':''}>${v}</option>`).join('')}
+                            </select>
+                            <span style="font-size: 11px; color: #999;">RIJ ${i}</span>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <input type="text" id="i-${i}" placeholder="Zeg productnaam...">
+                            <button class="mic-btn" onclick="startSpeech(${i}, 'name')" id="mic-n-${i}">🎤</button>
+                        </div>
+                        
+                        <div class="input-wrapper">
+                            <input type="text" id="c-${i}" style="font-weight:bold;" placeholder="Zeg itemcode...">
+                            <button class="mic-btn" onclick="startSpeech(${i}, 'code')" id="mic-c-${i}">🔢</button>
+                        </div>
                     </div>
                 `);
             }
         </script>
     </div>
+</div>
 
-    <button id="p-btn" onclick="printNu()">PDF MAKEN</button>
+<button class="btn-print" onclick="doPrint()">PDF GENEREREN</button>
 
-    <div id="p-grid">
-        </div>
-
+<div class="grid" id="printGrid">
     <script>
-        // Spraakfunctie
-        function talk(targetId) {
-            const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if(!Speech) return alert("Gebruik Chrome op Android");
-            const rec = new Speech();
-            rec.lang = 'nl-NL';
-            rec.onresult = (e) => {
-                let txt = e.results[0][0].transcript.toUpperCase();
-                if(targetId.startsWith('c')) txt = txt.replace(/STREEPJE/g, '-').replace(/\s/g, '');
-                document.getElementById(targetId).value = txt;
-            };
-            rec.start();
-        }
-
-        // Printfunctie
-        function printNu() {
-            const grid = document.getElementById('p-grid');
-            grid.innerHTML = ''; // Maak leeg
-            
-            for(let i=1; i<=12; i++) {
-                const naam = document.getElementById('i'+i).value || "";
-                const code = document.getElementById('c'+i).value || "";
-                const kleur = document.getElementById('k'+i).value;
-                const catNaam = document.getElementById('t'+i).value;
-
-                grid.innerHTML += `
-                    <div class="l ${kleur}">
-                        <small>${catNaam}</small>
-                        <div class="n">${naam}</div>
-                        <div class="c">${code}</div>
-                    </div>
-                `;
-            }
-
-            // Start printen
-            window.print();
+        for(let i=1; i<=8; i++) {
+            document.write(`
+                <div class="label" id="label-${i}">
+                    <span style="font-weight:bold; font-size:12pt; opacity:0.8;" id="o-cat-${i}"></span>
+                    <div class="itm-n" id="o-name-${i}"></div>
+                    <div class="itm-c" id="o-code-${i}"></div>
+                </div>
+            `);
         }
     </script>
+</div>
+
+<script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function startSpeech(id, targetType) {
+        if (!SpeechRecognition) {
+            alert("Browser niet ondersteund. Gebruik Chrome op Android.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'nl-NL';
+        const btnId = targetType === 'name' ? 'mic-n-' + id : 'mic-c-' + id;
+        const inputId = targetType === 'name' ? 'i-' + id : 'c-' + id;
+        const micBtn = document.getElementById(btnId);
+        
+        recognition.onstart = () => micBtn.classList.add('listening');
+
+        recognition.onresult = (event) => {
+            let result = event.results[0][0].transcript;
+            
+            if (targetType === 'code') {
+                // Code opschonen: spaties weg, "streepje" wordt "-", letters naar hoofdletters
+                result = result.toLowerCase()
+                               .replace(/streepje/g, '-')
+                               .replace(/\s+/g, '')
+                               .toUpperCase();
+            } else {
+                result = result.toUpperCase();
+            }
+
+            document.getElementById(inputId).value = result;
+            micBtn.classList.remove('listening');
+        };
+
+        recognition.onerror = () => micBtn.classList.remove('listening');
+        recognition.onend = () => micBtn.classList.remove('listening');
+
+        recognition.start();
+    }
+
+    function doPrint() {
+        for(let i=1; i<=8; i++) {
+            const sel = document.getElementById('sel-' + i);
+            const label = document.getElementById('label-' + i);
+            label.className = 'label c-' + sel.value;
+            document.getElementById('o-cat-' + i).innerText = sel.options[sel.selectedIndex].text;
+            document.getElementById('o-name-' + i).innerText = document.getElementById('i-' + i).value || "";
+            const cVal = document.getElementById('c-' + i).value;
+            document.getElementById('o-code-' + i).innerText = cVal || "";
+            document.getElementById('o-code-' + i).style.display = cVal ? 'block' : 'none';
+        }
+        window.print();
+    }
+</script>
 </body>
 </html>
