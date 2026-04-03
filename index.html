@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fietshub Label Matrix</title>
+    <title>Fietshub Label Matrix 2x6</title>
     <style>
         :root { --blue: #007bff; --green: #28a745; --red: #dc3545; }
         body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 120px; }
@@ -13,7 +13,7 @@
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
         .row { background: white; padding: 10px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #ddd; }
         .row-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        select { padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 140px; background: #f8f8f8; }
+        select { padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 140px; background: #f8f8f8; font-size: 13px; }
         .input-wrapper { display: flex; align-items: center; gap: 8px; }
         input { padding: 10px; border: 2px solid #eee; border-radius: 8px; font-size: 14px; flex: 1; outline: none; }
         .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -22,38 +22,42 @@
         
         .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 400px; cursor: pointer; }
 
-        /* PRINT LAYOUT */
+        /* PRINT LAYOUT - GEOPTIMALISEERD VOOR 1 PAGINA */
         #printGrid { display: none; }
 
         @media print {
             .controls, .btn-print, header { display: none !important; }
-            @page { size: A4; margin: 0; }
-            html, body { margin: 0; padding: 0; background: white; }
+            @page { 
+                size: A4 portrait; 
+                margin: 0.5cm; /* Kleine marge helpt browsers om alles op 1 vel te houden */
+            }
+            html, body { margin: 0; padding: 0; background: white; height: auto; }
             
             #printGrid { 
                 display: grid !important; 
-                grid-template-columns: 10.5cm 10.5cm; 
-                grid-template-rows: repeat(6, 4.9cm); 
-                width: 21cm; 
-                margin: 0;
+                grid-template-columns: 9.5cm 9.5cm; /* Iets smaller voor zijmarges */
+                grid-template-rows: repeat(6, 4.6cm); /* Totaal 27.6cm (veilig voor A4) */
+                width: 19cm; 
+                margin: 0 auto;
                 padding: 0;
+                gap: 0;
                 -webkit-print-color-adjust: exact !important; 
                 print-color-adjust: exact !important; 
             }
             .label { 
-                width: 10.5cm; 
-                height: 4.9cm; 
+                width: 9.5cm; 
+                height: 4.6cm; 
                 display: flex; 
                 flex-direction: column; 
                 justify-content: space-between; 
-                padding: 15px; 
+                padding: 10px 15px; 
                 box-sizing: border-box; 
                 text-transform: uppercase; 
-                border: 0.1pt solid #eee;
+                border: 0.1pt solid #ddd;
                 break-inside: avoid;
             }
-            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 20pt; font-weight: 900; text-align: center; }
-            .itm-c { align-self: flex-end; background: white; color: black; padding: 3px 10px; font-size: 12pt; font-weight: bold; border: 1px solid #000; }
+            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 18pt; font-weight: 900; text-align: center; line-height: 1.1; }
+            .itm-c { align-self: flex-end; background: white; color: black; padding: 2px 8px; font-size: 11pt; font-weight: bold; border: 1px solid #000; }
         }
 
         /* Kleur Klassen */
@@ -112,7 +116,7 @@
         for(let i=1; i<=12; i++) {
             document.write(`
                 <div class="label" id="label-${i}">
-                    <span style="font-weight:bold; font-size:10pt; opacity:0.7;" id="o-cat-${i}"></span>
+                    <span style="font-weight:bold; font-size:9pt; opacity:0.7;" id="o-cat-${i}"></span>
                     <div class="itm-n" id="o-name-${i}"></div>
                     <div class="itm-c" id="o-code-${i}"></div>
                 </div>
@@ -148,28 +152,18 @@
     }
 
     function doPrint() {
-        // Vul eerst alle labels met de huidige data
         for(let i=1; i<=12; i++) {
             const sel = document.getElementById('sel-' + i);
             const label = document.getElementById('label-' + i);
-            
-            // Kleur instellen
             label.className = 'label c-' + sel.value;
-            
-            // Teksten vullen
             document.getElementById('o-cat-' + i).innerText = sel.options[sel.selectedIndex].text;
             document.getElementById('o-name-' + i).innerText = document.getElementById('i-' + i).value || "";
-            
             const cVal = document.getElementById('c-' + i).value;
             const codeBox = document.getElementById('o-code-' + i);
             codeBox.innerText = cVal || "";
             codeBox.style.display = cVal ? 'block' : 'none';
         }
-
-        // Geef de browser een fractie van een seconde om de DOM te updaten en start dan print
-        setTimeout(() => {
-            window.print();
-        }, 100);
+        setTimeout(() => { window.print(); }, 150);
     }
 </script>
 </body>
