@@ -42,21 +42,60 @@
         @media print {
             .container, .btn-print, header { display: none !important; }
             @page { size: A4; margin: 0; }
-            html, body { margin: 0; padding: 0; background: white; font-family: 'Inter', sans-serif; }
-            #printGrid { display: grid !important; grid-template-columns: 10.5cm 10.5cm; grid-template-rows: repeat(4, 7.42cm); width: 21cm; height: 29.7cm; }
-            .label { width: 10.5cm; height: 7.42cm; display: flex; flex-direction: column; justify-content: space-between; padding: 45px 35px; box-sizing: border-box; text-transform: uppercase; border: 0.1pt solid #eee; break-inside: avoid; }
-            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 34pt; font-weight: 900; text-align: center; line-height: 1.1; letter-spacing: -0.04em; }
-            .itm-c { align-self: flex-end; background: white; color: black !important; padding: 10px 25px; font-size: 26pt; font-weight: 900; border: 5px solid #000; }
+            html, body { margin: 0; padding: 0; background: white !important; font-family: 'Inter', sans-serif; }
+            #printGrid { 
+                display: grid !important; 
+                grid-template-columns: 10.5cm 10.5cm; 
+                grid-template-rows: repeat(4, 7.42cm); 
+                width: 21cm; 
+                height: 29.7cm; 
+            }
+            .label { 
+                width: 10.5cm; 
+                height: 7.42cm; 
+                display: flex; 
+                flex-direction: column; 
+                justify-content: space-between; 
+                padding: 40px 30px; 
+                box-sizing: border-box; 
+                text-transform: uppercase; 
+                border: 0.1pt solid #eee; 
+                break-inside: avoid;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .itm-n { 
+                flex-grow: 1; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                font-size: 30pt; /* Iets kleiner gemaakt voor betere leesbaarheid */
+                font-weight: 900; 
+                text-align: center; 
+                line-height: 1.1; 
+                letter-spacing: -0.04em; 
+            }
+            .itm-c { 
+                align-self: flex-end; 
+                background: white !important; 
+                color: black !important; 
+                padding: 10px 20px; 
+                font-size: 22pt; /* Iets kleiner gemaakt */
+                font-weight: 900; 
+                border: 4px solid #000; 
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
         }
 
-        /* Kleuren per categorie  */
-        .c-pneu { background: #E30613 !important; color: white !important; } /* Rood */
-        .c-vae { background: #FFD400 !important; color: black !important; }  /* Geel */
-        .c-frein { background: #FF8200 !important; color: white !important; } /* Oranje */
-        .c-dir { background: #009FE3 !important; color: white !important; }   /* Blauw */
-        .c-trans { background: #4DB848 !important; color: white !important; } /* Groen */
-        .c-acc { background: #63666A !important; color: white !important; }   /* Grijs */
-        .c-bsr { background: #E4007E !important; color: white !important; }   /* Roze */
+        /* Kleurcodes uit segmentatiebestand [cite: 1, 2, 3, 4, 5, 7, 8] */
+        .c-pneu { background-color: #E30613 !important; color: white !important; }
+        .c-vae { background-color: #FFD400 !important; color: black !important; }
+        .c-frein { background-color: #FF8200 !important; color: white !important; }
+        .c-dir { background-color: #009FE3 !important; color: white !important; }
+        .c-trans { background-color: #4DB848 !important; color: white !important; }
+        .c-acc { background-color: #63666A !important; color: white !important; }
+        .c-bsr { background-color: #E4007E !important; color: white !important; }
     </style>
 </head>
 <body>
@@ -100,10 +139,10 @@
     let labelQueue = [];
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    // Helper om gesproken getallen om te zetten naar cijfers
     function wordToNum(text) {
         const map = {
-            'nul':0,'één':1,'een':1,'twee':2,'drie':3,'vier':4,'vijf':5,'zes':6,'zeven':7,'acht':8,'negen':9,'tien':10
+            'nul':0,'één':1,'een':1,'twee':2,'drie':3,'vier':4,'vijf':5,'zes':6,'zeven':7,'acht':8,'negen':9,'tien':10,
+            'elf':11,'twaalf':12,'dertien':13,'veertien':14,'vijftien':15,'twintig':20
         };
         return text.split(' ').map(word => map[word.toLowerCase()] ?? word).join('');
     }
@@ -178,7 +217,7 @@
         labelQueue.forEach(item => {
             grid.innerHTML += `
                 <div class="label c-${item.key}">
-                    <span style="font-weight:700; font-size:16pt; opacity:0.9;">${item.cat}</span>
+                    <span style="font-weight:700; font-size:14pt; opacity:0.9;">${item.cat}</span>
                     <div class="itm-n">${item.name}</div>
                     <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
                 </div>`;
