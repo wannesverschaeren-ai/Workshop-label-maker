@@ -46,9 +46,8 @@
             #printGrid { 
                 display: grid !important; 
                 grid-template-columns: 10.5cm 10.5cm; 
-                grid-template-rows: repeat(4, 7.42cm); 
+                grid-template-rows: repeat(auto-fill, 7.42cm); 
                 width: 21cm; 
-                height: 29.7cm; 
             }
             .label { 
                 width: 10.5cm; 
@@ -64,31 +63,11 @@
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
             }
-            .itm-n { 
-                flex-grow: 1; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                font-size: 30pt; /* Iets kleiner gemaakt voor betere leesbaarheid */
-                font-weight: 900; 
-                text-align: center; 
-                line-height: 1.1; 
-                letter-spacing: -0.04em; 
-            }
-            .itm-c { 
-                align-self: flex-end; 
-                background: white !important; 
-                color: black !important; 
-                padding: 10px 20px; 
-                font-size: 22pt; /* Iets kleiner gemaakt */
-                font-weight: 900; 
-                border: 4px solid #000; 
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
+            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 30pt; font-weight: 900; text-align: center; line-height: 1.1; letter-spacing: -0.04em; }
+            .itm-c { align-self: flex-end; background: white !important; color: black !important; padding: 10px 20px; font-size: 22pt; font-weight: 900; border: 4px solid #000; }
         }
 
-        /* Kleurcodes uit segmentatiebestand [cite: 1, 2, 3, 4, 5, 7, 8] */
+        /* Kleuren  */
         .c-pneu { background-color: #E30613 !important; color: white !important; }
         .c-vae { background-color: #FFD400 !important; color: black !important; }
         .c-frein { background-color: #FF8200 !important; color: white !important; }
@@ -126,7 +105,7 @@
     </div>
 
     <div class="queue-header">
-        <strong id="counter">Wachtrij: 0 / 8</strong>
+        <strong id="counter">Wachtrij: 0 labels</strong>
         <button onclick="clearAll()" style="color:var(--red); border:none; background:none; font-size:12px; cursor:pointer; font-weight:700;">WIS ALLES</button>
     </div>
     <div id="queueList"></div>
@@ -139,28 +118,44 @@
     let labelQueue = [];
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+    // OPTIE 3: Slimme trefwoorden map
+    const keywordMap = {
+        pneu: ['BAND', 'PNEU', 'TUBE', 'VELG'],
+        vae: ['ACCU', 'MOTOR', 'DISPLAY', 'SENSOR', 'E-BIKE', 'BATTER'],
+        frein: ['REMPAD', 'SCHIJF', 'REMVLOEISTOF', 'BRAKE', 'PATIN', 'REMH'],
+        dir: ['VORK', 'STUUR', 'PEN', 'BALHOOFD', 'FOURCHE'],
+        trans: ['KETTING', 'CASSETTE', 'TRAPAS', 'PEDAAL', 'DERAILLEUR', 'TAND'],
+        bsr: ['KIND', 'MEISJE', 'JONGEN', 'LOOPFIETS']
+    };
+
+    function autoSelectCategory(text) {
+        for (const [cat, keywords] of Object.entries(keywordMap)) {
+            if (keywords.some(kw => text.includes(kw))) {
+                document.getElementById('catSelect').value = cat;
+                break;
+            }
+        }
+    }
+
     function wordToNum(text) {
-        const map = {
-            'nul':0,'één':1,'een':1,'twee':2,'drie':3,'vier':4,'vijf':5,'zes':6,'zeven':7,'acht':8,'negen':9,'tien':10,
-            'elf':11,'twaalf':12,'dertien':13,'veertien':14,'vijftien':15,'twintig':20
-        };
+        const map = {'nul':0,'één':1,'een':1,'twee':2,'drie':3,'vier':4,'vijf':5,'zes':6,'zeven':7,'acht':8,'negen':9,'tien':10};
         return text.split(' ').map(word => map[word.toLowerCase()] ?? word).join('');
     }
 
     function startSpeech(inputId, type) {
-        if (!SpeechRecognition) return alert("Gebruik Chrome op Android");
+        if (!SpeechRecognition) return alert("Chrome aub");
         const rec = new SpeechRecognition();
         rec.lang = 'nl-NL';
         const btn = document.getElementById(type === 'name' ? 'mic-n' : 'mic-c');
         
         rec.onstart = () => btn.classList.add('listening');
         rec.onresult = (e) => {
-            let res = e.results[0][0].transcript;
+            let res = e.results[0][0].transcript.toUpperCase();
+            if(type === 'name') {
+                autoSelectCategory(res);
+            }
             if(type === 'code') {
-                res = wordToNum(res);
-                res = res.toLowerCase().replace(/streepje/g, '-').replace(/\s+/g, '').toUpperCase();
-            } else {
-                res = res.toUpperCase();
+                res = wordToNum(res).replace(/STREEPJE/g, '-').replace(/\s+/g, '');
             }
             document.getElementById(inputId).value = res;
         };
@@ -169,12 +164,11 @@
     }
 
     function addToQueue() {
-        if (labelQueue.length >= 8) return alert("Blad is vol (max 8).");
         const nameInput = document.getElementById('prodName');
         const codeInput = document.getElementById('prodCode');
         const catSelect = document.getElementById('catSelect');
 
-        if (!nameInput.value) return alert("Naam is verplicht.");
+        if (!nameInput.value) return;
 
         labelQueue.push({
             key: catSelect.value,
@@ -190,17 +184,14 @@
 
     function render() {
         const list = document.getElementById('queueList');
-        const counter = document.getElementById('counter');
         document.getElementById('printBtn').disabled = labelQueue.length === 0;
-        counter.innerText = `Wachtrij: ${labelQueue.length} / 8`;
+        document.getElementById('counter').innerText = `Wachtrij: ${labelQueue.length} labels`;
         list.innerHTML = '';
-
         labelQueue.forEach((item, index) => {
-            list.innerHTML += `
-                <div class="queue-item" style="border-left-color: ${getHex(item.key)}">
-                    <span><strong>${item.name}</strong> <small>(${item.cat})</small></span>
-                    <button class="remove-btn" onclick="labelQueue.splice(${index},1);render();">✕</button>
-                </div>`;
+            list.innerHTML += `<div class="queue-item" style="border-left-color: ${getHex(item.key)}">
+                <span><strong>${item.name}</strong> <small>(${item.cat})</small></span>
+                <button class="remove-btn" onclick="labelQueue.splice(${index},1);render();">✕</button>
+            </div>`;
         });
     }
 
@@ -215,12 +206,7 @@
         const grid = document.getElementById('printGrid');
         grid.innerHTML = '';
         labelQueue.forEach(item => {
-            grid.innerHTML += `
-                <div class="label c-${item.key}">
-                    <span style="font-weight:700; font-size:14pt; opacity:0.9;">${item.cat}</span>
-                    <div class="itm-n">${item.name}</div>
-                    <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
-                </div>`;
+            grid.innerHTML += `<div class="label c-${item.key}"><span style="font-weight:700; font-size:14pt; opacity:0.9;">${item.cat}</span><div class="itm-n">${item.name}</div><div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div></div>`;
         });
         setTimeout(() => { window.print(); }, 250);
     }
