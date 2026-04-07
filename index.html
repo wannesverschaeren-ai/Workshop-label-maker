@@ -3,174 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fietshub Voice-to-Label</title>
-    <link rel="manifest" href="manifest.json">
+    <title>Fietshub A7 Scanner</title>
     <style>
-        :root { --blue: #007bff; --green: #28a745; --red: #dc3545; }
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 120px; }
-        header { background: var(--blue); color: white; padding: 15px; text-align: center; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        :root { --blue: #007bff; --green: #28a745; --red: #dc3545; --gray: #6c757d; }
+        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 100px; }
+        header { background: var(--blue); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; }
         
-        .controls { padding: 10px; max-width: 900px; margin: auto; }
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+        .container { padding: 15px; max-width: 500px; margin: auto; }
         
-        .row { background: white; padding: 12px; border-radius: 15px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .row-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        /* Het Invoerblok */
+        .input-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--blue); margin-bottom: 20px; }
+        .input-card h3 { margin-top: 0; font-size: 14px; color: var(--blue); text-transform: uppercase; }
         
-        select { padding: 6px; border: 1px solid #ccc; border-radius: 6px; font-weight: bold; width: 150px; background: #f8f8f8; font-size: 13px; }
+        select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 16px; background: #f9f9f9; }
         
-        .input-wrapper { display: flex; align-items: center; gap: 8px; width: 100%; }
-        input { padding: 10px; border: 2px solid #eee; border-radius: 8px; font-size: 15px; flex: 1; min-width: 0; outline: none; }
+        .input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        input { padding: 15px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; flex: 1; outline: none; }
         input:focus { border-color: var(--blue); }
         
-        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; font-size: 18px; flex-shrink: 0; }
+        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; flex-shrink: 0; }
         .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
         
+        .add-btn { width: 100%; padding: 15px; background: var(--blue); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        
+        /* Wachtrij overzicht */
+        .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .queue-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .queue-item { background: #fff; padding: 8px 12px; border-radius: 20px; border: 1px solid #ddd; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+        .queue-item button { background: none; border: none; color: var(--red); font-weight: bold; cursor: pointer; }
+
+        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 400px; }
+        .btn-print:disabled { background: var(--gray); opacity: 0.5; }
+
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 400px; cursor: pointer; }
-
-        /* Print Layout (A4 - 12 Labels: 2x6) */
+        /* PRINT LAYOUT - A7 Formaat (8 labels op A4) */
+        #printGrid { display: none; }
         @media print {
-            .controls, .btn-print, header { display: none !important; }
+            .container, .btn-print, header { display: none !important; }
             @page { size: A4; margin: 0; }
             html, body { margin: 0; padding: 0; background: white; }
-            .grid { 
+            #printGrid { 
                 display: grid !important; 
                 grid-template-columns: 10.5cm 10.5cm; 
-                grid-template-rows: repeat(6, 4.8cm); /* 28.8cm totaal, past op A4 (29.7cm) */
+                grid-template-rows: repeat(4, 7.42cm); /* A7 hoogte is exact 7.42cm */
                 width: 21cm; 
-                margin: 0; 
-                padding: 0;
+                height: 29.7cm;
                 -webkit-print-color-adjust: exact !important; 
                 print-color-adjust: exact !important; 
             }
             .label { 
                 width: 10.5cm; 
-                height: 4.8cm; 
+                height: 7.42cm; 
                 display: flex; 
                 flex-direction: column; 
                 justify-content: space-between; 
-                padding: 15px; 
+                padding: 30px; 
                 box-sizing: border-box; 
                 text-transform: uppercase; 
-                border: 0.1pt solid #eee;
+                border: 0.1pt solid #ddd;
                 break-inside: avoid;
             }
-            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 20pt; font-weight: 900; text-align: center; line-height: 1.1; }
-            .itm-c { align-self: flex-end; background: white; color: black; padding: 4px 10px; font-size: 13pt; font-weight: bold; border: 1px solid #000; }
+            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 28pt; font-weight: 900; text-align: center; }
+            .itm-c { align-self: flex-end; background: white; color: black; padding: 5px 15px; font-size: 16pt; font-weight: bold; border: 2px solid #000; }
         }
 
-        .grid { display: none; }
-        .c-ebike { background-color: #FFD700 !important; color: #000; }
-        .c-v3 { background-color: #FF8C00 !important; color: #fff; }
-        .c-schijf { background-color: #D32F2F !important; color: #fff; }
-        .c-velg { background-color: #EF5350 !important; color: #fff; }
-        .c-stuur { background-color: #1976D2 !important; color: #fff; }
-        .c-trans { background-color: #388E3C !important; color: #fff; }
-        .c-acc { background-color: #455A64 !important; color: #fff; }
-        .c-fit { background-color: #EC407A !important; color: #fff; }
+        /* Categorie kleuren */
+        .c-ebike { background: #FFD700 !important; color: #000; }
+        .c-v3 { background: #FF8C00 !important; color: #fff; }
+        .c-schijf { background: #D32F2F !important; color: #fff; }
+        .c-velg { background: #EF5350 !important; color: #fff; }
+        .c-stuur { background: #1976D2 !important; color: #fff; }
+        .c-trans { background: #388E3C !important; color: #fff; }
+        .c-acc { background: #455A64 !important; color: #fff; }
+        .c-fit { background: #EC407A !important; color: #fff; }
     </style>
 </head>
 <body>
 
-<header>FIETSHUB VOICE LABELS (2x6)</header>
+<header>FIETSHUB A7 SCANNER</header>
 
-<div class="controls">
-    <div class="input-grid">
-        <script>
-            const catList = {
-                "ebike": "E-BIKE", "v3": "E-BIKE V3", "schijf": "SCHIJFREM", 
-                "velg": "VELGREM", "stuur": "STUUR", "trans": "TRANSMISSIE", 
-                "acc": "ACCESSORIES", "fit": "FITNESS"
-            };
-            const keys = Object.keys(catList);
-            // We genereren nu 12 rijen voor 12 labels
-            for(let i=1; i<=12; i++) {
-                document.write(`
-                    <div class="row">
-                        <div class="row-header">
-                            <select id="sel-${i}">
-                                ${Object.entries(catList).map(([k,v]) => `<option value="${k}" ${k===keys[(i-1)%8]?'selected':''}>${v}</option>`).join('')}
-                            </select>
-                            <span style="font-size: 10px; color: #bbb;">LABEL ${i}</span>
-                        </div>
-                        <div class="input-wrapper">
-                            <input type="text" id="i-${i}" placeholder="Zeg productnaam...">
-                            <button class="mic-btn" onclick="startSpeech(${i}, 'name')" id="mic-n-${i}">🎤</button>
-                        </div>
-                        <div class="input-wrapper">
-                            <input type="text" id="c-${i}" style="font-weight:bold;" placeholder="Zeg itemcode...">
-                            <button class="mic-btn" onclick="startSpeech(${i}, 'code')" id="mic-c-${i}">🔢</button>
-                        </div>
-                    </div>
-                `);
-            }
-        </script>
+<div class="container">
+    <div class="input-card">
+        <h3>Nieuw Label</h3>
+        <select id="catSelect">
+            <option value="ebike">E-BIKE</option>
+            <option value="v3">E-BIKE V3</option>
+            <option value="schijf">SCHIJFREM</option>
+            <option value="velg">VELGREM</option>
+            <option value="stuur">STUUR</option>
+            <option value="trans">TRANSMISSIE</option>
+            <option value="acc">ACCESSORIES</option>
+            <option value="fit">FITNESS</option>
+        </select>
+
+        <div class="input-wrapper">
+            <input type="text" id="prodName" placeholder="Naam (🎤)">
+            <button class="mic-btn" onclick="startSpeech('prodName', 'name')" id="mic-n">🎤</button>
+        </div>
+
+        <div class="input-wrapper">
+            <input type="text" id="prodCode" placeholder="Code (🔢)">
+            <button class="mic-btn" onclick="startSpeech('prodCode', 'code')" id="mic-c">🔢</button>
+        </div>
+
+        <button class="add-btn" onclick="addToQueue()">TOEVOEGEN AAN LIJST</button>
     </div>
+
+    <div class="queue-header">
+        <strong id="counter">Wachtrij: 0 / 8</strong>
+        <button onclick="clearAll()" style="color:var(--red); border:none; background:none; font-size:12px; cursor:pointer;">Wis alles</button>
+    </div>
+    <div class="queue-list" id="queueList"></div>
 </div>
 
-<button class="btn-print" onclick="doPrint()">PDF GENEREREN (1 PAGINA)</button>
+<button class="btn-print" id="printBtn" disabled onclick="doPrint()">PDF GENEREREN</button>
 
-<div class="grid" id="printGrid">
-    <script>
-        // Grid vullen voor 12 labels
-        for(let i=1; i<=12; i++) {
-            document.write(`
-                <div class="label" id="label-${i}">
-                    <span style="font-weight:bold; font-size:10pt; opacity:0.8;" id="o-cat-${i}"></span>
-                    <div class="itm-n" id="o-name-${i}"></div>
-                    <div class="itm-c" id="o-code-${i}"></div>
-                </div>
-            `);
-        }
-    </script>
-</div>
+<div id="printGrid"></div>
 
 <script>
+    let labelQueue = [];
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    function startSpeech(id, targetType) {
-        if (!SpeechRecognition) {
-            alert("Gebruik Chrome op Android.");
-            return;
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.lang = 'nl-NL';
-        const btnId = targetType === 'name' ? 'mic-n-' + id : 'mic-c-' + id;
-        const inputId = targetType === 'name' ? 'i-' + id : 'c-' + id;
-        const micBtn = document.getElementById(btnId);
+    function startSpeech(inputId, type) {
+        if (!SpeechRecognition) return alert("Chrome aub");
+        const rec = new SpeechRecognition();
+        rec.lang = 'nl-NL';
+        const btn = type === 'name' ? document.getElementById('mic-n') : document.getElementById('mic-c');
         
-        recognition.onstart = () => micBtn.classList.add('listening');
-
-        recognition.onresult = (event) => {
-            let result = event.results[0][0].transcript;
-            if (targetType === 'code') {
-                result = result.toLowerCase().replace(/streepje/g, '-').replace(/\s+/g, '').toUpperCase();
-            } else {
-                result = result.toUpperCase();
-            }
-            document.getElementById(inputId).value = result;
+        rec.onstart = () => btn.classList.add('listening');
+        rec.onresult = (e) => {
+            let res = e.results[0][0].transcript;
+            if(type === 'code') res = res.toLowerCase().replace(/streepje/g, '-').replace(/\s+/g, '').toUpperCase();
+            else res = res.toUpperCase();
+            document.getElementById(inputId).value = res;
         };
+        rec.onend = () => btn.classList.remove('listening');
+        rec.start();
+    }
 
-        recognition.onerror = () => micBtn.classList.remove('listening');
-        recognition.onend = () => micBtn.classList.remove('listening');
-        recognition.start();
+    function addToQueue() {
+        if (labelQueue.length >= 8) return alert("Maximaal 8 labels per pagina!");
+        
+        const cat = document.getElementById('catSelect');
+        const name = document.getElementById('prodName').value;
+        const code = document.getElementById('prodCode').value;
+
+        if (!name) return alert("Vul een naam in");
+
+        labelQueue.push({
+            catKey: cat.value,
+            catName: cat.options[cat.selectedIndex].text,
+            name: name,
+            code: code
+        });
+
+        // Reset inputs
+        document.getElementById('prodName').value = '';
+        document.getElementById('prodCode').value = '';
+        renderQueue();
+    }
+
+    function renderQueue() {
+        const list = document.getElementById('queueList');
+        const btn = document.getElementById('printBtn');
+        const counter = document.getElementById('counter');
+        
+        list.innerHTML = '';
+        labelQueue.forEach((item, index) => {
+            list.innerHTML += `
+                <div class="queue-item">
+                    ${item.name} (${item.catName}) 
+                    <button onclick="removeItem(${index})">✕</button>
+                </div>
+            `;
+        });
+
+        counter.innerText = `Wachtrij: ${labelQueue.length} / 8`;
+        btn.disabled = labelQueue.length === 0;
+    }
+
+    function removeItem(index) {
+        labelQueue.splice(index, 1);
+        renderQueue();
+    }
+
+    function clearAll() {
+        if(confirm("Hele lijst wissen?")) {
+            labelQueue = [];
+            renderQueue();
+        }
     }
 
     function doPrint() {
-        for(let i=1; i<=12; i++) {
-            const sel = document.getElementById('sel-' + i);
-            const label = document.getElementById('label-' + i);
-            label.className = 'label c-' + sel.value;
-            document.getElementById('o-cat-' + i).innerText = sel.options[sel.selectedIndex].text;
-            document.getElementById('o-name-' + i).innerText = document.getElementById('i-' + i).value || "";
-            const cVal = document.getElementById('c-' + i).value;
-            document.getElementById('o-code-' + i).innerText = cVal || "";
-            document.getElementById('o-code-' + i).style.display = cVal ? 'block' : 'none';
-        }
-        // Kleine vertraging voor DOM update
-        setTimeout(() => { window.print(); }, 150);
+        const grid = document.getElementById('printGrid');
+        grid.innerHTML = '';
+
+        labelQueue.forEach(item => {
+            grid.innerHTML += `
+                <div class="label c-${item.catKey}">
+                    <span style="font-weight:bold; font-size:14pt; opacity:0.8;">${item.catName}</span>
+                    <div class="itm-n">${item.name}</div>
+                    <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
+                </div>
+            `;
+        });
+
+        setTimeout(() => { window.print(); }, 200);
     }
 </script>
 </body>
