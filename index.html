@@ -28,9 +28,12 @@
         .mic-btn { background: #f0f2f5; border: none; border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
         .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
         .add-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; text-transform: uppercase; cursor: pointer; }
-        .queue-item { background: #fff; padding: 12px 15px; border-radius: 10px; border-left: 8px solid #ddd; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .remove-btn { background: #fff1f1; border: none; color: var(--red); width: 30px; height: 30px; border-radius: 50%; font-weight: 700; cursor: pointer; }
-        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 18px; z-index: 100; width: 85%; max-width: 400px; cursor: pointer; text-transform: uppercase; }
+        
+        .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
+        .queue-item { background: #fff; padding: 12px 15px; border-radius: 10px; border-left: 10px solid #ddd; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .remove-btn { background: #fff1f1; border: none; color: var(--red); width: 32px; height: 32px; border-radius: 50%; font-weight: 700; cursor: pointer; }
+        
+        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 18px; z-index: 100; width: 85%; max-width: 400px; cursor: pointer; text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
@@ -39,20 +42,21 @@
         @media print {
             .container, .btn-print, header { display: none !important; }
             @page { size: A4; margin: 0; }
+            html, body { margin: 0; padding: 0; background: white; font-family: 'Inter', sans-serif; }
             #printGrid { display: grid !important; grid-template-columns: 10.5cm 10.5cm; grid-template-rows: repeat(4, 7.42cm); width: 21cm; height: 29.7cm; }
             .label { width: 10.5cm; height: 7.42cm; display: flex; flex-direction: column; justify-content: space-between; padding: 45px 35px; box-sizing: border-box; text-transform: uppercase; border: 0.1pt solid #eee; break-inside: avoid; }
             .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 34pt; font-weight: 900; text-align: center; line-height: 1.1; letter-spacing: -0.04em; }
             .itm-c { align-self: flex-end; background: white; color: black !important; padding: 10px 25px; font-size: 26pt; font-weight: 900; border: 5px solid #000; }
         }
 
-        /* Kleuren gebaseerd op Atelier Segmentatie bestand */
+        /* Kleuren per categorie  */
         .c-pneu { background: #E30613 !important; color: white !important; } /* Rood */
-        .c-vae { background: #FFD400 !important; color: black !important; } /* Geel */
+        .c-vae { background: #FFD400 !important; color: black !important; }  /* Geel */
         .c-frein { background: #FF8200 !important; color: white !important; } /* Oranje */
-        .c-dir { background: #009FE3 !important; color: white !important; } /* Blauw */
+        .c-dir { background: #009FE3 !important; color: white !important; }   /* Blauw */
         .c-trans { background: #4DB848 !important; color: white !important; } /* Groen */
-        .c-acc { background: #63666A !important; color: white !important; } /* Grijs */
-        .c-bsr { background: #E4007E !important; color: white !important; } /* Roze */
+        .c-acc { background: #63666A !important; color: white !important; }   /* Grijs */
+        .c-bsr { background: #E4007E !important; color: white !important; }   /* Roze */
     </style>
 </head>
 <body>
@@ -61,16 +65,16 @@
 
 <div class="container">
     <div class="input-card">
-        
-    <select id="catSelect">
-        <option value="pneu">BANDEN</option>
-        <option value="vae">E-BIKE ONDERDELEN</option>
-        <option value="frein">REMSYSTEEM</option>
-        <option value="dir">STUURINRICHTING</option>
-        <option value="trans">AANDRIJVING</option>
-        <option value="acc">ACCESSOIRES</option>
-        <option value="bsr">KINDERFIETSEN</option>
-    </select>
+        <h3>Nieuw Label</h3>
+        <select id="catSelect">
+            <option value="pneu">BANDEN</option>
+            <option value="vae">E-BIKE ONDERDELEN</option>
+            <option value="frein">REMSYSTEEM</option>
+            <option value="dir">STUURINRICHTING</option>
+            <option value="trans">AANDRIJVING</option>
+            <option value="acc">ACCESSOIRES</option>
+            <option value="bsr">KINDERFIETSEN</option>
+        </select>
         <div class="input-wrapper">
             <input type="text" id="prodName" placeholder="Productnaam..." autocomplete="off">
             <button class="mic-btn" onclick="startSpeech('prodName', 'name')" id="mic-n">🎤</button>
@@ -80,6 +84,11 @@
             <button class="mic-btn" onclick="startSpeech('prodCode', 'code')" id="mic-c">🔢</button>
         </div>
         <button class="add-btn" onclick="addToQueue()">Toevoegen</button>
+    </div>
+
+    <div class="queue-header">
+        <strong id="counter">Wachtrij: 0 / 8</strong>
+        <button onclick="clearAll()" style="color:var(--red); border:none; background:none; font-size:12px; cursor:pointer; font-weight:700;">WIS ALLES</button>
     </div>
     <div id="queueList"></div>
 </div>
@@ -91,16 +100,29 @@
     let labelQueue = [];
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+    // Helper om gesproken getallen om te zetten naar cijfers
+    function wordToNum(text) {
+        const map = {
+            'nul':0,'één':1,'een':1,'twee':2,'drie':3,'vier':4,'vijf':5,'zes':6,'zeven':7,'acht':8,'negen':9,'tien':10
+        };
+        return text.split(' ').map(word => map[word.toLowerCase()] ?? word).join('');
+    }
+
     function startSpeech(inputId, type) {
-        if (!SpeechRecognition) return alert("Chrome aub");
+        if (!SpeechRecognition) return alert("Gebruik Chrome op Android");
         const rec = new SpeechRecognition();
         rec.lang = 'nl-NL';
         const btn = document.getElementById(type === 'name' ? 'mic-n' : 'mic-c');
+        
         rec.onstart = () => btn.classList.add('listening');
         rec.onresult = (e) => {
             let res = e.results[0][0].transcript;
-            if(type === 'code') res = res.toLowerCase().replace(/streepje/g, '-').replace(/\s+/g, '').toUpperCase();
-            else res = res.toUpperCase();
+            if(type === 'code') {
+                res = wordToNum(res);
+                res = res.toLowerCase().replace(/streepje/g, '-').replace(/\s+/g, '').toUpperCase();
+            } else {
+                res = res.toUpperCase();
+            }
             document.getElementById(inputId).value = res;
         };
         rec.onend = () => btn.classList.remove('listening');
@@ -108,55 +130,58 @@
     }
 
     function addToQueue() {
-        if (labelQueue.length >= 8) return alert("Vel is vol.");
-        const name = document.getElementById('prodName').value;
-        if (!name) return;
+        if (labelQueue.length >= 8) return alert("Blad is vol (max 8).");
+        const nameInput = document.getElementById('prodName');
+        const codeInput = document.getElementById('prodCode');
+        const catSelect = document.getElementById('catSelect');
+
+        if (!nameInput.value) return alert("Naam is verplicht.");
+
         labelQueue.push({
-            key: document.getElementById('catSelect').value,
-            cat: document.getElementById('catSelect').options[document.getElementById('catSelect').selectedIndex].text,
-            name: name,
-            code: document.getElementById('prodCode').value
+            key: catSelect.value,
+            cat: catSelect.options[catSelect.selectedIndex].text,
+            name: nameInput.value,
+            code: codeInput.value
         });
-        document.getElementById('prodName').value = '';
-        document.getElementById('prodCode').value = '';
+
+        nameInput.value = '';
+        codeInput.value = '';
         render();
     }
 
     function render() {
         const list = document.getElementById('queueList');
+        const counter = document.getElementById('counter');
         document.getElementById('printBtn').disabled = labelQueue.length === 0;
+        counter.innerText = `Wachtrij: ${labelQueue.length} / 8`;
         list.innerHTML = '';
+
         labelQueue.forEach((item, index) => {
-            list.innerHTML += `<div class="queue-item" style="border-left-color: ${getHex(item.key)}">
-                <span><strong>${item.name}</strong> <small>(${item.cat})</small></span>
-                <button class="remove-btn" onclick="labelQueue.splice(${index},1);render();">✕</button>
-            </div>`;
+            list.innerHTML += `
+                <div class="queue-item" style="border-left-color: ${getHex(item.key)}">
+                    <span><strong>${item.name}</strong> <small>(${item.cat})</small></span>
+                    <button class="remove-btn" onclick="labelQueue.splice(${index},1);render();">✕</button>
+                </div>`;
         });
     }
 
-    // Bijgewerkte kleurenanalyse
-function getHex(key) {
-    const colors = {
-        pneu: '#E30613',  // Rood
-        vae: '#FFD400',   // Geel
-        frein: '#FF8200', // Oranje
-        dir: '#009FE3',   // Blauw
-        trans: '#4DB848', // Groen
-        acc: '#63666A',   // Grijs
-        bsr: '#E4007E'    // Roze
-    };
-    return colors[key];
-}
+    function getHex(key) {
+        const colors = {pneu:'#E30613', vae:'#FFD400', frein:'#FF8200', dir:'#009FE3', trans:'#4DB848', acc:'#63666A', bsr:'#E4007E'};
+        return colors[key];
+    }
+
+    function clearAll() { if(confirm("Wachtrij leegmaken?")) { labelQueue = []; render(); } }
 
     function doPrint() {
         const grid = document.getElementById('printGrid');
         grid.innerHTML = '';
         labelQueue.forEach(item => {
-            grid.innerHTML += `<div class="label c-${item.key}">
-                <span style="font-weight:700; font-size:16pt; opacity:0.9;">${item.cat}</span>
-                <div class="itm-n">${item.name}</div>
-                <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
-            </div>`;
+            grid.innerHTML += `
+                <div class="label c-${item.key}">
+                    <span style="font-weight:700; font-size:16pt; opacity:0.9;">${item.cat}</span>
+                    <div class="itm-n">${item.name}</div>
+                    <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
+                </div>`;
         });
         setTimeout(() => { window.print(); }, 250);
     }
