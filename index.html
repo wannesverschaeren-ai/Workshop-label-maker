@@ -4,121 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WORKSHOP LABEL MAKER</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
     <style>
-        :root { --blue: #007bff; --green: #28a745; --red: #dc3545; --gray: #6c757d; }
-        body { font-family: sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 100px; }
-        header { background: var(--blue); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; }
-        
+        :root { 
+            --blue-dark: #1a1a1a; 
+            --accent: #007bff; 
+            --green: #28a745; 
+            --red: #dc3545; 
+            --font-main: 'Inter', -apple-system, sans-serif;
+        }
+
+        body { font-family: var(--font-main); margin: 0; background: #f0f2f5; padding-bottom: 100px; -webkit-font-smoothing: antialiased; }
+        header { background: var(--blue-dark); color: white; padding: 20px; text-align: center; font-weight: 900; letter-spacing: 1px; position: sticky; top: 0; z-index: 100; text-transform: uppercase; }
         .container { padding: 15px; max-width: 500px; margin: auto; }
-        
-        /* Het Invoerblok */
-        .input-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid var(--blue); margin-bottom: 20px; }
-        .input-card h3 { margin-top: 0; font-size: 14px; color: var(--blue); text-transform: uppercase; }
-        
-        select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; margin-bottom: 15px; font-size: 16px; background: #f9f9f9; }
-        
+        .input-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 5px solid var(--accent); margin-bottom: 25px; }
+        select { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; margin-bottom: 15px; font-size: 16px; font-family: var(--font-main); }
         .input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        input { padding: 15px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; flex: 1; outline: none; }
-        input:focus { border-color: var(--blue); }
-        
-        .mic-btn { background: #f0f0f0; border: none; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; flex-shrink: 0; }
+        input { padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; flex: 1; outline: none; font-family: var(--font-main); }
+        .mic-btn { background: #f0f2f5; border: none; border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; }
         .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
-        
-        .add-btn { width: 100%; padding: 15px; background: var(--blue); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        
-        /* Wachtrij overzicht */
-        .queue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .queue-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .queue-item { background: #fff; padding: 8px 12px; border-radius: 20px; border: 1px solid #ddd; font-size: 12px; display: flex; align-items: center; gap: 8px; }
-        .queue-item button { background: none; border: none; color: var(--red); font-weight: bold; cursor: pointer; }
+        .add-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; text-transform: uppercase; cursor: pointer; }
+        .queue-item { background: #fff; padding: 12px 15px; border-radius: 10px; border-left: 8px solid #ddd; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .remove-btn { background: #fff1f1; border: none; color: var(--red); width: 30px; height: 30px; border-radius: 50%; font-weight: 700; cursor: pointer; }
+        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 18px; z-index: 100; width: 85%; max-width: 400px; cursor: pointer; text-transform: uppercase; }
 
-        .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: bold; font-size: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 100; width: 85%; max-width: 400px; }
-        .btn-print:disabled { background: var(--gray); opacity: 0.5; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-
-        /* PRINT LAYOUT - A7 Formaat (8 labels op A4) */
+        /* PRINT LAYOUT */
         #printGrid { display: none; }
         @media print {
             .container, .btn-print, header { display: none !important; }
             @page { size: A4; margin: 0; }
-            html, body { margin: 0; padding: 0; background: white; }
-            #printGrid { 
-                display: grid !important; 
-                grid-template-columns: 10.5cm 10.5cm; 
-                grid-template-rows: repeat(4, 7.42cm); /* A7 hoogte is exact 7.42cm */
-                width: 21cm; 
-                height: 29.7cm;
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-            }
-            .label { 
-                width: 10.5cm; 
-                height: 7.42cm; 
-                display: flex; 
-                flex-direction: column; 
-                justify-content: space-between; 
-                padding: 30px; 
-                box-sizing: border-box; 
-                text-transform: uppercase; 
-                border: 0.1pt solid #ddd;
-                break-inside: avoid;
-            }
-            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 28pt; font-weight: 900; text-align: center; }
-            .itm-c { align-self: flex-end; background: white; color: black; padding: 5px 15px; font-size: 16pt; font-weight: bold; border: 2px solid #000; }
+            #printGrid { display: grid !important; grid-template-columns: 10.5cm 10.5cm; grid-template-rows: repeat(4, 7.42cm); width: 21cm; height: 29.7cm; }
+            .label { width: 10.5cm; height: 7.42cm; display: flex; flex-direction: column; justify-content: space-between; padding: 45px 35px; box-sizing: border-box; text-transform: uppercase; border: 0.1pt solid #eee; break-inside: avoid; }
+            .itm-n { flex-grow: 1; display: flex; align-items: center; justify-content: center; font-size: 34pt; font-weight: 900; text-align: center; line-height: 1.1; letter-spacing: -0.04em; }
+            .itm-c { align-self: flex-end; background: white; color: black !important; padding: 10px 25px; font-size: 26pt; font-weight: 900; border: 5px solid #000; }
         }
 
-        /* Categorie kleuren */
-        .c-ebike { background: #FFD700 !important; color: #000; }
-        .c-v3 { background: #FF8C00 !important; color: #fff; }
-        .c-schijf { background: #D32F2F !important; color: #fff; }
-        .c-velg { background: #EF5350 !important; color: #fff; }
-        .c-stuur { background: #1976D2 !important; color: #fff; }
-        .c-trans { background: #388E3C !important; color: #fff; }
-        .c-acc { background: #455A64 !important; color: #fff; }
-        .c-fit { background: #EC407A !important; color: #fff; }
+        /* Kleuren gebaseerd op Atelier Segmentatie bestand */
+        .c-pneu { background: #E30613 !important; color: white !important; } /* Rood */
+        .c-vae { background: #FFD400 !important; color: black !important; } /* Geel */
+        .c-frein { background: #FF8200 !important; color: white !important; } /* Oranje */
+        .c-dir { background: #009FE3 !important; color: white !important; } /* Blauw */
+        .c-trans { background: #4DB848 !important; color: white !important; } /* Groen */
+        .c-acc { background: #63666A !important; color: white !important; } /* Grijs */
+        .c-bsr { background: #E4007E !important; color: white !important; } /* Roze */
     </style>
 </head>
 <body>
 
-<header>FIETSHUB A7 SCANNER</header>
+<header>WORKSHOP LABEL MAKER</header>
 
 <div class="container">
     <div class="input-card">
-        <h3>Nieuw Label</h3>
-        <select id="catSelect">
-            <option value="ebike">E-BIKE</option>
-            <option value="v3">E-BIKE V3</option>
-            <option value="schijf">SCHIJFREM</option>
-            <option value="velg">VELGREM</option>
-            <option value="stuur">STUUR</option>
-            <option value="trans">TRANSMISSIE</option>
-            <option value="acc">ACCESSORIES</option>
-            <option value="fit">FITNESS</option>
-        </select>
-
+        // Bijgewerkte lijst voor de dropdown
+<select id="catSelect">
+    <option value="pneu">BANDEN</option>
+    <option value="vae">E-BIKE ONDERDELEN</option>
+    <option value="frein">REMSYSTEEM</option>
+    <option value="dir">STUURINRICHTING</option>
+    <option value="trans">AANDRIJVING</option>
+    <option value="acc">ACCESSOIRES</option>
+    <option value="bsr">KINDERFIETSEN</option>
+</select>
         <div class="input-wrapper">
-            <input type="text" id="prodName" placeholder="Naam (🎤)">
+            <input type="text" id="prodName" placeholder="Productnaam..." autocomplete="off">
             <button class="mic-btn" onclick="startSpeech('prodName', 'name')" id="mic-n">🎤</button>
         </div>
-
         <div class="input-wrapper">
-            <input type="text" id="prodCode" placeholder="Code (🔢)">
+            <input type="text" id="prodCode" placeholder="Itemcode..." autocomplete="off">
             <button class="mic-btn" onclick="startSpeech('prodCode', 'code')" id="mic-c">🔢</button>
         </div>
-
-        <button class="add-btn" onclick="addToQueue()">TOEVOEGEN AAN LIJST</button>
+        <button class="add-btn" onclick="addToQueue()">Toevoegen</button>
     </div>
-
-    <div class="queue-header">
-        <strong id="counter">Wachtrij: 0 / 8</strong>
-        <button onclick="clearAll()" style="color:var(--red); border:none; background:none; font-size:12px; cursor:pointer;">Wis alles</button>
-    </div>
-    <div class="queue-list" id="queueList"></div>
+    <div id="queueList"></div>
 </div>
 
-<button class="btn-print" id="printBtn" disabled onclick="doPrint()">PDF GENEREREN</button>
-
+<button class="btn-print" id="printBtn" disabled onclick="doPrint()">Genereer Printvel</button>
 <div id="printGrid"></div>
 
 <script>
@@ -129,8 +95,7 @@
         if (!SpeechRecognition) return alert("Chrome aub");
         const rec = new SpeechRecognition();
         rec.lang = 'nl-NL';
-        const btn = type === 'name' ? document.getElementById('mic-n') : document.getElementById('mic-c');
-        
+        const btn = document.getElementById(type === 'name' ? 'mic-n' : 'mic-c');
         rec.onstart = () => btn.classList.add('listening');
         rec.onresult = (e) => {
             let res = e.results[0][0].transcript;
@@ -143,73 +108,57 @@
     }
 
     function addToQueue() {
-        if (labelQueue.length >= 8) return alert("Maximaal 8 labels per pagina!");
-        
-        const cat = document.getElementById('catSelect');
+        if (labelQueue.length >= 8) return alert("Vel is vol.");
         const name = document.getElementById('prodName').value;
-        const code = document.getElementById('prodCode').value;
-
-        if (!name) return alert("Vul een naam in");
-
+        if (!name) return;
         labelQueue.push({
-            catKey: cat.value,
-            catName: cat.options[cat.selectedIndex].text,
+            key: document.getElementById('catSelect').value,
+            cat: document.getElementById('catSelect').options[document.getElementById('catSelect').selectedIndex].text,
             name: name,
-            code: code
+            code: document.getElementById('prodCode').value
         });
-
-        // Reset inputs
         document.getElementById('prodName').value = '';
         document.getElementById('prodCode').value = '';
-        renderQueue();
+        render();
     }
 
-    function renderQueue() {
+    function render() {
         const list = document.getElementById('queueList');
-        const btn = document.getElementById('printBtn');
-        const counter = document.getElementById('counter');
-        
+        document.getElementById('printBtn').disabled = labelQueue.length === 0;
         list.innerHTML = '';
         labelQueue.forEach((item, index) => {
-            list.innerHTML += `
-                <div class="queue-item">
-                    ${item.name} (${item.catName}) 
-                    <button onclick="removeItem(${index})">✕</button>
-                </div>
-            `;
+            list.innerHTML += `<div class="queue-item" style="border-left-color: ${getHex(item.key)}">
+                <span><strong>${item.name}</strong> <small>(${item.cat})</small></span>
+                <button class="remove-btn" onclick="labelQueue.splice(${index},1);render();">✕</button>
+            </div>`;
         });
-
-        counter.innerText = `Wachtrij: ${labelQueue.length} / 8`;
-        btn.disabled = labelQueue.length === 0;
     }
 
-    function removeItem(index) {
-        labelQueue.splice(index, 1);
-        renderQueue();
-    }
-
-    function clearAll() {
-        if(confirm("Hele lijst wissen?")) {
-            labelQueue = [];
-            renderQueue();
-        }
-    }
+    // Bijgewerkte kleurenanalyse
+function getHex(key) {
+    const colors = {
+        pneu: '#E30613',  // Rood
+        vae: '#FFD400',   // Geel
+        frein: '#FF8200', // Oranje
+        dir: '#009FE3',   // Blauw
+        trans: '#4DB848', // Groen
+        acc: '#63666A',   // Grijs
+        bsr: '#E4007E'    // Roze
+    };
+    return colors[key];
+}
 
     function doPrint() {
         const grid = document.getElementById('printGrid');
         grid.innerHTML = '';
-
         labelQueue.forEach(item => {
-            grid.innerHTML += `
-                <div class="label c-${item.catKey}">
-                    <span style="font-weight:bold; font-size:14pt; opacity:0.8;">${item.catName}</span>
-                    <div class="itm-n">${item.name}</div>
-                    <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
-                </div>
-            `;
+            grid.innerHTML += `<div class="label c-${item.key}">
+                <span style="font-weight:700; font-size:16pt; opacity:0.9;">${item.cat}</span>
+                <div class="itm-n">${item.name}</div>
+                <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
+            </div>`;
         });
-
-        setTimeout(() => { window.print(); }, 200);
+        setTimeout(() => { window.print(); }, 250);
     }
 </script>
 </body>
