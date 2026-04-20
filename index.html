@@ -38,7 +38,7 @@
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* PRINT LAYOUT GEOPTIMALISEERD VOOR LANGE NAMEN */
+        /* PRINT LAYOUT MET VASTE POSITIES  */
         #printGrid { display: none; }
         @media print {
             .container, .btn-print, header { display: none !important; }
@@ -53,10 +53,9 @@
             .label { 
                 width: 10.5cm; 
                 height: 7.42cm; 
-                display: flex; 
-                flex-direction: column; 
-                justify-content: space-between; 
-                padding: 45px 35px; 
+                display: block; /* Gebruik block voor vaste positionering */
+                position: relative;
+                padding: 30px; 
                 box-sizing: border-box; 
                 text-transform: uppercase; 
                 border: 0.1pt solid #eee; 
@@ -66,31 +65,44 @@
                 color: #000 !important;
                 overflow: hidden;
             }
+            .itm-cat {
+                font-weight: 700; 
+                font-size: 14pt; 
+                opacity: 0.9;
+                display: block;
+                margin-bottom: 20px;
+            }
             .itm-n { 
-                flex-grow: 1; 
+                height: 3.5cm; /* Vaste hoogte voor naam-sectie */
                 display: flex; 
                 align-items: center; 
                 justify-content: center; 
-                /* Dynamische font-grootte: krimpt bij lange tekst */
-                font-size: clamp(16pt, 6vw, 28pt); 
+                font-size: clamp(14pt, 5vw, 26pt); 
                 font-weight: 900; 
                 text-align: center; 
                 line-height: 1.1; 
                 letter-spacing: -0.02em;
-                margin: 10px 0;
+                width: 100%;
+            }
+            .itm-c-container {
+                position: absolute;
+                bottom: 35px;
+                right: 35px;
+                text-align: right;
+                width: 100%;
             }
             .itm-c { 
-                align-self: center; 
                 background: white !important; 
                 color: #000 !important; 
-                padding: 8px 18px; 
-                font-size: 18pt; /* Kleiner gemaakt zodat het altijd past */
+                padding: 10px 20px; 
+                font-size: 18pt; 
                 font-weight: 900; 
-                border: 3px solid #000; 
+                border: 4px solid #000; 
+                display: inline-block;
             }
         }
 
-        /* Kleuren per categorie  */
+        /* Kleurcodes Atelier Segmentatie  */
         .c-pneu { background-color: #E30613 !important; }
         .c-vae { background-color: #FFD400 !important; }
         .c-frein { background-color: #FF8200 !important; }
@@ -223,11 +235,14 @@
         const grid = document.getElementById('printGrid');
         grid.innerHTML = '';
         labelQueue.forEach(item => {
-            grid.innerHTML += `<div class="label c-${item.key}">
-                <span style="font-weight:700; font-size:14pt; opacity:1;">${item.cat}</span>
-                <div class="itm-n">${item.name}</div>
-                <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
-            </div>`;
+            grid.innerHTML += `
+                <div class="label c-${item.key}">
+                    <span class="itm-cat">${item.cat}</span>
+                    <div class="itm-n">${item.name}</div>
+                    <div class="itm-c-container">
+                        <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
+                    </div>
+                </div>`;
         });
         setTimeout(() => { window.print(); }, 250);
     }
