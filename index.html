@@ -25,7 +25,6 @@
         .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
         .add-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; text-transform: uppercase; cursor: pointer; margin-top: 10px; }
         
-        /* Visuele Blad-vulling */
         .page-preview { display: grid; gap: 2px; width: 60px; height: 80px; background: #ddd; padding: 4px; border-radius: 4px; margin: 10px auto; }
         .slot { background: #fff; border-radius: 1px; }
         .slot.filled { background: var(--accent); }
@@ -38,21 +37,48 @@
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* PRINT LAYOUT */
+        /* PRINT LAYOUT - FORCED SINGLE SIDED */
         #printGrid { display: none; }
         @media print {
             .container, .btn-print, header { display: none !important; }
-            @page { size: A4 portrait; margin: 0; duplex: none; }
-            html, body { margin: 0; padding: 0; background: white !important; }
-            #printGrid { display: grid !important; width: 210mm; height: 297mm; grid-template-columns: var(--print-cols); grid-template-rows: repeat(auto-fill, var(--print-height)); }
-            .label { width: 100%; height: var(--print-height); display: block; position: relative; padding: 20px; box-sizing: border-box; text-transform: uppercase; border: 0.1pt solid #eee; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; color: #000 !important; overflow: hidden; }
+            @page { 
+                size: A4 portrait; 
+                margin: 0 !important; 
+            }
+            html, body { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            #printGrid { 
+                display: grid !important; 
+                width: 210mm; 
+                grid-template-columns: var(--print-cols); 
+                grid-template-rows: repeat(auto-fill, var(--print-height));
+                page-break-after: always;
+            }
+            .label { 
+                width: 100%; 
+                height: var(--print-height); 
+                display: block; 
+                position: relative; 
+                padding: 20px; 
+                box-sizing: border-box; 
+                text-transform: uppercase; 
+                border: 0.1pt solid #eee; 
+                page-break-inside: avoid;
+                break-inside: avoid;
+                color: #000 !important; 
+                overflow: hidden;
+            }
             .itm-cat { font-weight: 700; font-size: 12pt; display: block; margin-bottom: 5px; }
             .itm-n { height: 60%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; }
             .itm-c-container { position: absolute; bottom: 20px; right: 20px; }
             .itm-c { background: white !important; border: 4px solid #000; padding: 5px 15px; font-size: var(--font-size-code); font-weight: 900; }
         }
 
-        /* Kleuren  */
         .c-pneu { background-color: #E30613 !important; } .c-vae { background-color: #FFD400 !important; }
         .c-frein { background-color: #FF8200 !important; } .c-dir { background-color: #009FE3 !important; }
         .c-trans { background-color: #4DB848 !important; } .c-acc { background-color: #63666A !important; }
@@ -129,7 +155,6 @@
         bsr: ['KIND', 'MEISJE', 'JONGEN', 'LOOPFIETS', 'JUNIOR']
     };
 
-    // Enter-toets ondersteuning
     document.getElementById('prodName').addEventListener('keypress', e => { if(e.key === 'Enter') addToQueue(); });
     document.getElementById('prodCode').addEventListener('keypress', e => { if(e.key === 'Enter') addToQueue(); });
 
@@ -138,7 +163,6 @@
         const visual = document.getElementById('visualPage');
         const countMap = { a5:2, a6:4, a7:8, a7h:12, a8:16 };
         const gridMap = { a5:'1fr/1fr', a6:'1fr 1fr/1fr 1fr', a7:'1fr 1fr/repeat(4,1fr)', a7h:'repeat(3,1fr)/repeat(4,1fr)', a8:'repeat(4,1fr)/repeat(4,1fr)'};
-        
         const total = countMap[size];
         visual.style.gridTemplate = gridMap[size];
         visual.innerHTML = '';
@@ -178,10 +202,8 @@
         const codeInput = document.getElementById('prodCode');
         const qtyInput = document.getElementById('prodQty');
         const catSelect = document.getElementById('catSelect');
-        
         if (!nameInput.value) return;
         const qty = parseInt(qtyInput.value) || 1;
-        
         for(let i=0; i<qty; i++) {
             labelQueue.push({ 
                 key: catSelect.value, 
@@ -190,11 +212,8 @@
                 code: codeInput.value.toUpperCase() 
             });
         }
-        
-        nameInput.value = ''; 
-        codeInput.value = ''; 
-        qtyInput.value = '1';
-        nameInput.focus(); // Automatische focus terug naar productnaam
+        nameInput.value = ''; codeInput.value = ''; qtyInput.value = '1';
+        nameInput.focus();
         render();
     }
 
@@ -250,7 +269,6 @@
         });
         setTimeout(() => { window.print(); }, 250);
     }
-    
     renderVisualPage();
 </script>
 </body>
