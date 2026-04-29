@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER</title>
+    <title>WORKSHOP LABEL MAKER PRO</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,114 +11,75 @@
 
     <style>
         :root { 
-            --blue-dark: #1a1a1a; 
-            --accent: #007bff; 
-            --green: #28a745; 
-            --red: #dc3545; 
-            --font-main: 'Inter', -apple-system, sans-serif;
+            --blue-dark: #1a1a1a; --accent: #007bff; --green: #28a745; --red: #dc3545; --font-main: 'Inter', sans-serif;
         }
 
-        body { font-family: var(--font-main); margin: 0; background: #f0f2f5; padding-bottom: 100px; -webkit-font-smoothing: antialiased; color: #000; }
-        header { background: var(--blue-dark); color: white; padding: 20px; text-align: center; font-weight: 900; letter-spacing: 1px; position: sticky; top: 0; z-index: 100; text-transform: uppercase; }
+        body { font-family: var(--font-main); margin: 0; background: #f0f2f5; padding-bottom: 140px; color: #000; }
+        header { background: var(--blue-dark); color: white; padding: 20px; text-align: center; font-weight: 900; position: sticky; top: 0; z-index: 100; text-transform: uppercase; }
         .container { padding: 15px; max-width: 500px; margin: auto; }
-        .input-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 5px solid var(--accent); margin-bottom: 25px; }
+        .input-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 5px solid var(--accent); margin-bottom: 20px; }
         
-        select { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; margin-bottom: 15px; font-size: 16px; font-family: var(--font-main); color: #000; background: #fefefe; }
-        .input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        input { padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 16px; flex: 1; outline: none; font-family: var(--font-main); color: #000; }
-        
-        .mic-btn { background: #f0f2f5; border: none; border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; color: #000; }
+        select, input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; margin-bottom: 12px; font-size: 16px; font-family: var(--font-main); box-sizing: border-box; }
+        .input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .mic-btn { background: #f0f2f5; border: none; border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; flex-shrink: 0; }
         .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
-        .add-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; text-transform: uppercase; cursor: pointer; }
+        .add-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; text-transform: uppercase; cursor: pointer; margin-top: 10px; }
         
-        .queue-item { background: #fff; padding: 12px 15px; border-radius: 10px; border-left: 10px solid #ddd; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .remove-btn { background: #fff1f1; border: none; color: var(--red); width: 32px; height: 32px; border-radius: 50%; font-weight: 700; cursor: pointer; }
+        /* Visuele Blad-vulling (Optie 4) */
+        .page-preview { display: grid; gap: 2px; width: 60px; height: 80px; background: #ddd; padding: 4px; border-radius: 4px; margin: 10px auto; }
+        .slot { background: #fff; border-radius: 1px; }
+        .slot.filled { background: var(--accent); }
+
+        .queue-item { background: #fff; padding: 12px; border-radius: 10px; border-left: 10px solid #ddd; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .queue-item input { margin-bottom: 0; padding: 8px; font-size: 14px; }
+        .remove-btn { background: #fff1f1; border: none; color: var(--red); width: 32px; height: 32px; border-radius: 50%; font-weight: 700; cursor: pointer; flex-shrink: 0; }
         
         .btn-print { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 18px 40px; background: var(--green); color: white; border: none; border-radius: 50px; font-weight: 700; font-size: 18px; z-index: 100; width: 85%; max-width: 400px; cursor: pointer; text-transform: uppercase; }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* PRINT LAYOUT MET VASTE POSITIES  */
+        /* PRINT LAYOUT */
         #printGrid { display: none; }
         @media print {
             .container, .btn-print, header { display: none !important; }
-            @page { size: A4; margin: 0; }
-            html, body { margin: 0; padding: 0; background: white !important; font-family: 'Inter', sans-serif; }
-            #printGrid { 
-                display: grid !important; 
-                grid-template-columns: 10.5cm 10.5cm; 
-                grid-template-rows: repeat(4, 7.42cm); 
-                width: 21cm; 
-            }
-            .label { 
-                width: 10.5cm; 
-                height: 7.42cm; 
-                display: block; /* Gebruik block voor vaste positionering */
-                position: relative;
-                padding: 30px; 
-                box-sizing: border-box; 
-                text-transform: uppercase; 
-                border: 0.1pt solid #eee; 
-                break-inside: avoid;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-                color: #000 !important;
-                overflow: hidden;
-            }
-            .itm-cat {
-                font-weight: 700; 
-                font-size: 14pt; 
-                opacity: 0.9;
-                display: block;
-                margin-bottom: 20px;
-            }
-            .itm-n { 
-                height: 3.5cm; /* Vaste hoogte voor naam-sectie */
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                font-size: clamp(14pt, 5vw, 26pt); 
-                font-weight: 900; 
-                text-align: center; 
-                line-height: 1.1; 
-                letter-spacing: -0.02em;
-                width: 100%;
-            }
-            .itm-c-container {
-                position: absolute;
-                bottom: 35px;
-                right: 35px;
-                text-align: right;
-                width: 100%;
-            }
-            .itm-c { 
-                background: white !important; 
-                color: #000 !important; 
-                padding: 10px 20px; 
-                font-size: 18pt; 
-                font-weight: 900; 
-                border: 4px solid #000; 
-                display: inline-block;
-            }
+            @page { size: A4 portrait; margin: 0; duplex: none; }
+            html, body { margin: 0; padding: 0; background: white !important; }
+            #printGrid { display: grid !important; width: 210mm; height: 297mm; grid-template-columns: var(--print-cols); grid-template-rows: repeat(auto-fill, var(--print-height)); }
+            .label { width: 100%; height: var(--print-height); display: block; position: relative; padding: 20px; box-sizing: border-box; text-transform: uppercase; border: 0.1pt solid #eee; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; color: #000 !important; overflow: hidden; }
+            .itm-cat { font-weight: 700; font-size: 12pt; display: block; margin-bottom: 5px; }
+            .itm-n { height: 60%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; }
+            .itm-c-container { position: absolute; bottom: 20px; right: 20px; }
+            .itm-c { background: white !important; border: 4px solid #000; padding: 5px 15px; font-size: var(--font-size-code); font-weight: 900; }
         }
 
-        /* Kleurcodes Atelier Segmentatie  */
-        .c-pneu { background-color: #E30613 !important; }
-        .c-vae { background-color: #FFD400 !important; }
-        .c-frein { background-color: #FF8200 !important; }
-        .c-dir { background-color: #009FE3 !important; }
-        .c-trans { background-color: #4DB848 !important; }
-        .c-acc { background-color: #63666A !important; }
+        /* Kleuren  */
+        .c-pneu { background-color: #E30613 !important; } .c-vae { background-color: #FFD400 !important; }
+        .c-frein { background-color: #FF8200 !important; } .c-dir { background-color: #009FE3 !important; }
+        .c-trans { background-color: #4DB848 !important; } .c-acc { background-color: #63666A !important; }
         .c-bsr { background-color: #E4007E !important; }
     </style>
 </head>
 <body>
 
-<header>WORKSHOP LABEL MAKER</header>
+<header>WORKSHOP LABEL MAKER PRO</header>
 
 <div class="container">
     <div class="input-card">
-        <h3>Nieuw Label</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="flex:1; margin-right:10px;">
+                <label style="font-size: 10px; font-weight: 700;">FORMAAT:</label>
+                <select id="sizeSelect" onchange="renderVisualPage()">
+                    <option value="a5">A5 (2)</option>
+                    <option value="a6">A6 (4)</option>
+                    <option value="a7" selected>A7 (8)</option>
+                    <option value="a7h">A7½ (12)</option>
+                    <option value="a8">A8 (16)</option>
+                </select>
+            </div>
+            <div id="visualPage" class="page-preview"></div>
+        </div>
+
+        <label style="font-size: 10px; font-weight: 700;">CATEGORIE:</label>
         <select id="catSelect">
             <option value="pneu">BANDEN</option>
             <option value="vae">E-BIKE ONDERDELEN</option>
@@ -128,14 +89,20 @@
             <option value="acc">ACCESSOIRES</option>
             <option value="bsr">KINDERFIETSEN</option>
         </select>
+        
         <div class="input-wrapper">
             <input type="text" id="prodName" placeholder="Productnaam..." autocomplete="off">
             <button class="mic-btn" onclick="startSpeech('prodName', 'name')" id="mic-n">🎤</button>
         </div>
+        
         <div class="input-wrapper">
             <input type="text" id="prodCode" placeholder="Itemcode..." autocomplete="off">
             <button class="mic-btn" onclick="startSpeech('prodCode', 'code')" id="mic-c">🔢</button>
         </div>
+
+        <label style="font-size: 10px; font-weight: 700;">AANTAL DUPLICATEN:</label>
+        <input type="number" id="prodQty" value="1" min="1" max="16">
+
         <button class="add-btn" onclick="addToQueue()">Toevoegen</button>
     </div>
 
@@ -154,13 +121,28 @@
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     const keywordMap = {
-        pneu: ['BAND', 'PNEU', 'TUBE', 'VELG', 'BINNENBAND', 'BUITENBAND'],
-        vae: ['ACCU', 'MOTOR', 'DISPLAY', 'SENSOR', 'E-BIKE', 'BATTER', 'ELECTR'],
-        frein: ['REMPAD', 'SCHIJF', 'REMVLOEISTOF', 'BRAKE', 'PATIN', 'REMH', 'BLOK'],
+        pneu: ['BAND', 'PNEU', 'TUBE', 'VELG'],
+        vae: ['ACCU', 'MOTOR', 'DISPLAY', 'SENSOR', 'E-BIKE'],
+        frein: ['REMPAD', 'SCHIJF', 'REMVLOEISTOF', 'BRAKE', 'PATIN', 'BLOK'],
         dir: ['VORK', 'STUUR', 'PEN', 'BALHOOFD', 'FOURCHE'],
-        trans: ['KETTING', 'CASSETTE', 'TRAPAS', 'PEDAAL', 'DERAILLEUR', 'TAND', 'CRANK'],
-        bsr: ['KIND', 'MEISJE', 'JONGEN', 'LOOPFIETS', 'JUNIOR']
+        trans: ['KETTING', 'CASSETTE', 'TRAPAS', 'PEDAAL', 'DERAILLEUR', 'TAND'],
+        bsr: ['KIND', 'MEISJE', 'JONGEN', 'LOOPFIETS']
     };
+
+    function renderVisualPage() {
+        const size = document.getElementById('sizeSelect').value;
+        const visual = document.getElementById('visualPage');
+        const countMap = { a5:2, a6:4, a7:8, a7h:12, a8:16 };
+        const gridMap = { a5:'1fr/1fr', a6:'1fr 1fr/1fr 1fr', a7:'1fr 1fr/repeat(4,1fr)', a7h:'repeat(3,1fr)/repeat(4,1fr)', a8:'repeat(4,1fr)/repeat(4,1fr)'};
+        
+        const total = countMap[size];
+        visual.style.gridTemplate = gridMap[size];
+        visual.innerHTML = '';
+        for(let i=0; i<total; i++) {
+            const isFilled = i < (labelQueue.length % (total + 1)) && labelQueue.length > 0;
+            visual.innerHTML += `<div class="slot ${isFilled ? 'filled' : ''}"></div>`;
+        }
+    }
 
     function autoSelectCategory(text) {
         for (const [cat, keywords] of Object.entries(keywordMap)) {
@@ -171,22 +153,22 @@
         }
     }
 
-    function wordToNum(text) {
-        const map = {'nul':0,'één':1,'een':1,'twee':2,'drie':3,'vier':4,'vijf':5,'zes':6,'zeven':7,'acht':8,'negen':9,'tien':10};
-        return text.split(' ').map(word => map[word.toLowerCase()] ?? word).join('');
-    }
-
     function startSpeech(inputId, type) {
         if (!SpeechRecognition) return alert("Chrome aub");
         const rec = new SpeechRecognition();
         rec.lang = 'nl-NL';
         const btn = document.getElementById(type === 'name' ? 'mic-n' : 'mic-c');
-        
         rec.onstart = () => btn.classList.add('listening');
         rec.onresult = (e) => {
             let res = e.results[0][0].transcript.toUpperCase();
+            
+            // Spraak-OK (Optie 1)
+            if(res.includes("OK") || res.includes("VOEG TOE")) {
+                addToQueue();
+                return;
+            }
+
             if(type === 'name') autoSelectCategory(res);
-            if(type === 'code') res = wordToNum(res).replace(/STREEPJE/g, '-').replace(/\s+/g, '');
             document.getElementById(inputId).value = res;
         };
         rec.onend = () => btn.classList.remove('listening');
@@ -194,20 +176,16 @@
     }
 
     function addToQueue() {
-        const nameInput = document.getElementById('prodName');
-        const codeInput = document.getElementById('prodCode');
-        const catSelect = document.getElementById('catSelect');
-        if (!nameInput.value) return;
+        const name = document.getElementById('prodName').value;
+        const code = document.getElementById('prodCode').value;
+        const qty = parseInt(document.getElementById('prodQty').value) || 1;
+        const cat = document.getElementById('catSelect');
+        if (!name) return;
 
-        labelQueue.push({
-            key: catSelect.value,
-            cat: catSelect.options[catSelect.selectedIndex].text,
-            name: nameInput.value,
-            code: codeInput.value
-        });
-
-        nameInput.value = '';
-        codeInput.value = '';
+        for(let i=0; i<qty; i++) {
+            labelQueue.push({ key: cat.value, cat: cat.options[cat.selectedIndex].text, name: name.toUpperCase(), code: code.toUpperCase() });
+        }
+        document.getElementById('prodName').value = ''; document.getElementById('prodCode').value = ''; document.getElementById('prodQty').value = '1';
         render();
     }
 
@@ -217,11 +195,16 @@
         document.getElementById('counter').innerText = `Wachtrij: ${labelQueue.length} labels`;
         list.innerHTML = '';
         labelQueue.forEach((item, index) => {
-            list.innerHTML += `<div class="queue-item" style="border-left-color: ${getHex(item.key)}">
-                <span><strong>${item.name}</strong> <small>(${item.cat})</small></span>
-                <button class="remove-btn" onclick="labelQueue.splice(${index},1);render();">✕</button>
-            </div>`;
+            list.innerHTML += `
+                <div class="queue-item" style="border-left-color: ${getHex(item.key)}">
+                    <div style="flex-grow: 1;">
+                        <input type="text" value="${item.name}" onchange="labelQueue[${index}].name = this.value.toUpperCase()">
+                        <input type="text" value="${item.code}" onchange="labelQueue[${index}].code = this.value.toUpperCase()" style="margin-top:5px; font-weight:bold;">
+                    </div>
+                    <button class="remove-btn" onclick="labelQueue.splice(${index},1);render();">✕</button>
+                </div>`;
         });
+        renderVisualPage();
     }
 
     function getHex(key) {
@@ -233,19 +216,33 @@
 
     function doPrint() {
         const grid = document.getElementById('printGrid');
+        const size = document.getElementById('sizeSelect').value;
         grid.innerHTML = '';
+        const settings = {
+            a5:  { cols: '210mm', height: '148.5mm', fontN: '45pt', fontC: '30pt' },
+            a6:  { cols: '105mm 105mm', height: '148.5mm', fontN: '35pt', fontC: '25pt' },
+            a7:  { cols: '105mm 105mm', height: '74.2mm', fontN: '26pt', fontC: '18pt' },
+            a7h: { cols: '70mm 70mm 70mm', height: '74.2mm', fontN: '20pt', fontC: '14pt' },
+            a8:  { cols: '52.5mm 52.5mm 52.5mm 52.5mm', height: '74.2mm', fontN: '16pt', fontC: '12pt' }
+        };
+        const s = settings[size];
+        grid.style.setProperty('--print-cols', s.cols);
+        grid.style.setProperty('--print-height', s.height);
+        grid.style.setProperty('--font-size-name', s.fontN);
+        grid.style.setProperty('--font-size-code', s.fontC);
+
         labelQueue.forEach(item => {
             grid.innerHTML += `
                 <div class="label c-${item.key}">
                     <span class="itm-cat">${item.cat}</span>
                     <div class="itm-n">${item.name}</div>
-                    <div class="itm-c-container">
-                        <div class="itm-c" style="${item.code ? '' : 'display:none'}">${item.code}</div>
-                    </div>
+                    <div class="itm-c-container"><div class="itm-c">${item.code}</div></div>
                 </div>`;
         });
         setTimeout(() => { window.print(); }, 250);
     }
+    
+    renderVisualPage(); // Initial render
 </script>
 </body>
 </html>
