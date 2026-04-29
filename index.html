@@ -37,7 +37,7 @@
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* PRINT LAYOUT - FORCED SINGLE SIDED */
+        /* PRINT LAYOUT */
         #printGrid { display: none; }
         @media print {
             .container, .btn-print, header { display: none !important; }
@@ -46,8 +46,7 @@
                 margin: 0 !important; 
             }
             html, body { 
-                margin: 0 !important; 
-                padding: 0 !important; 
+                margin: 0 !important; padding: 0 !important; 
                 background: white !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -57,21 +56,15 @@
                 width: 210mm; 
                 grid-template-columns: var(--print-cols); 
                 grid-template-rows: repeat(auto-fill, var(--print-height));
-                page-break-after: always;
+                page-break-after: always; /* Forceert stop na elk vel */
             }
             .label { 
-                width: 100%; 
-                height: var(--print-height); 
-                display: block; 
-                position: relative; 
-                padding: 20px; 
-                box-sizing: border-box; 
-                text-transform: uppercase; 
+                width: 100%; height: var(--print-height); 
+                display: block; position: relative; padding: 20px; 
+                box-sizing: border-box; text-transform: uppercase; 
                 border: 0.1pt solid #eee; 
-                page-break-inside: avoid;
-                break-inside: avoid;
-                color: #000 !important; 
-                overflow: hidden;
+                page-break-inside: avoid; break-inside: avoid;
+                color: #000 !important; overflow: hidden;
             }
             .itm-cat { font-weight: 700; font-size: 12pt; display: block; margin-bottom: 5px; }
             .itm-n { height: 60%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; }
@@ -79,9 +72,13 @@
             .itm-c { background: white !important; border: 4px solid #000; padding: 5px 15px; font-size: var(--font-size-code); font-weight: 900; }
         }
 
-        .c-pneu { background-color: #E30613 !important; } .c-vae { background-color: #FFD400 !important; }
-        .c-frein { background-color: #FF8200 !important; } .c-dir { background-color: #009FE3 !important; }
-        .c-trans { background-color: #4DB848 !important; } .c-acc { background-color: #63666A !important; }
+        /* Vernieuwde kleuren voor betere leesbaarheid tekst  */
+        .c-pneu { background-color: #E30613 !important; } 
+        .c-vae { background-color: #FFD400 !important; }
+        .c-frein { background-color: #FF8200 !important; } 
+        .c-dir { background-color: #009FE3 !important; }
+        .c-trans { background-color: #93d68f !important; } /* Lichter groen voor transmissie */
+        .c-acc { background-color: #d1d3d4 !important; }   /* Lichter grijs voor accessoires */
         .c-bsr { background-color: #E4007E !important; }
     </style>
 </head>
@@ -152,6 +149,7 @@
         frein: ['REMPAD', 'SCHIJF', 'REMVLOEISTOF', 'BRAKE', 'PATIN', 'REMH', 'BLOK'],
         dir: ['VORK', 'STUUR', 'PEN', 'BALHOOFD', 'FOURCHE'],
         trans: ['KETTING', 'CASSETTE', 'TRAPAS', 'PEDAAL', 'DERAILLEUR', 'TAND', 'CRANK'],
+        acc: ['BEL', 'TAS', 'SLOT', 'POMP', 'LICHT', 'SPAT'],
         bsr: ['KIND', 'MEISJE', 'JONGEN', 'LOOPFIETS', 'JUNIOR']
     };
 
@@ -236,7 +234,7 @@
     }
 
     function getHex(key) {
-        const colors = {pneu:'#E30613', vae:'#FFD400', frein:'#FF8200', dir:'#009FE3', trans:'#4DB848', acc:'#63666A', bsr:'#E4007E'};
+        const colors = {pneu:'#E30613', vae:'#FFD400', frein:'#FF8200', dir:'#009FE3', trans:'#93d68f', acc:'#d1d3d4', bsr:'#E4007E'};
         return colors[key];
     }
 
@@ -267,6 +265,10 @@
                     <div class="itm-c-container"><div class="itm-c">${item.code}</div></div>
                 </div>`;
         });
+        
+        // Extra witruimte toevoegen voor printer buffer
+        grid.innerHTML += `<div style="height: 1mm; width: 100%; page-break-after: always;"></div>`;
+
         setTimeout(() => { window.print(); }, 250);
     }
     renderVisualPage();
