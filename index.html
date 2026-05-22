@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V17</title>
+    <title>WORKSHOP LABEL MAKER PRO V18</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,7 +20,9 @@
         header { background: var(--blue-dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         header h1 { margin: 0; font-size: 18px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
         
-        .nav-btns { display: flex; gap: 10px; align-items: center; }
+        .nav-btns { display: flex; gap: 8px; align-items: center; }
+        .nav-tool { background: #333; color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; min-width: 35px; }
+        .nav-tool.active { background: var(--green); }
         .info-btn { background: var(--accent); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: 900; font-size: 18px; }
 
         .container { padding: 15px; max-width: 500px; margin: auto; }
@@ -56,15 +58,10 @@
             }
             
             .itm-cat { font-weight: 700; font-size: 10pt; display: block; margin-bottom: 5px; opacity: 0.8; }
-            .itm-n { height: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; }
+            .itm-n { height: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; color: inherit !important; }
             
-            /* QR Code Positie */
-            .qr-wrap { position: absolute; background: white; padding: 2px; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
-            
-            /* Standaard QR Positie (Rechtsonder) */
+            .qr-wrap { position: absolute; background: white; padding: 2px; display: flex; align-items: center; justify-content: center; border-radius: 2px; border: 1px solid #eee; }
             .qr-std { bottom: 15px; right: 15px; width: var(--qr-size); height: var(--qr-size); }
-            
-            /* A8 Micro QR Positie (Rechtsboven, vervangt categorie) */
             .qr-micro { top: 10px; right: 10px; width: 35px; height: 35px; }
 
             .itm-c-container { position: absolute; bottom: 15px; left: 15px; }
@@ -79,7 +76,8 @@
 <header>
     <h1 id="txt-title">Workshop Labels</h1>
     <div class="nav-btns">
-        <select id="langSelect" onchange="changeLanguage()" style="width:auto; margin-bottom:0; padding:5px; font-size:12px; background: #333; color: white; border:none; border-radius:5px;">
+        <button id="colorToggle" class="nav-tool active" onclick="toggleColors()" title="Kleur aan/uit">🎨</button>
+        <select id="langSelect" onchange="changeLanguage()" class="nav-tool" style="width: auto;">
             <option value="nl">NL</option>
             <option value="fr">FR</option>
             <option value="en">EN</option>
@@ -141,28 +139,35 @@
 <script>
     let currentLang = localStorage.getItem('appLang') || 'nl';
     let labelQueue = JSON.parse(localStorage.getItem('labelQueue')) || [];
+    let useColors = JSON.parse(localStorage.getItem('useColors')) !== false;
     let selectedCat = 'pneu';
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     const translations = {
         nl: {
             title: "Atelier Labels", size: "Formaat", cat: "Categorie", name: "Productnaam", code: "Itemcode", qty: "Aantal", add: "Toevoegen", clear: "WIS ALLES", print: "Genereer Printvel", labels: "Wachtrij",
-            howTo: "<h3>QR-Codes</h3>Elk label krijgt nu een QR-code op basis van de itemcode.<h3>A8 Micro</h3>De categorie is hier vervangen door de QR-code om ruimte te besparen.",
+            howTo: "<h3>Kleur Toggle 🎨</h3>Gebruik de knop rechtsboven om kleur in- of uit te schakelen voor het printen.<h3>QR-Codes</h3>Staan altijd op het label voor snelle scans.",
             categories: { pneu: "BANDEN", vae: "E-BIKE", frein: "REMSYSTEEM", dir: "STUUR", trans: "AANDRIJVING", acc: "ACCESSOIRES", bsr: "KIDS" }
         },
         fr: {
             title: "Étiquettes Atelier", size: "Format", cat: "Catégorie", name: "Nom", code: "Code", qty: "Quantité", add: "Ajouter", clear: "EFFACER", print: "Imprimer", labels: "File",
-            howTo: "<h3>Codes QR</h3>Chaque étiquette a maintenant un code QR.<h3>A8 Micro</h3>La catégorie est remplacée par le code QR.",
+            howTo: "<h3>Couleur 🎨</h3>Utilisez le bouton en haut à droite pour activer/désactiver la couleur d'impression.<h3>Codes QR</h3>Toujours présents.",
             categories: { pneu: "PNEUS", vae: "VAE", frein: "FREINAGE", dir: "DIRECTION", trans: "TRANSMISSION", acc: "ACCESSOIRES", bsr: "ENFANTS" }
         },
         en: {
             title: "Workshop Labels", size: "Format", cat: "Category", name: "Name", code: "Code", qty: "Qty", add: "Add", clear: "CLEAR", print: "Print Sheet", labels: "Queue",
-            howTo: "<h3>QR-Codes</h3>Every label now features a QR code.<h3>A8 Micro</h3>The category is replaced by the QR code to save space.",
+            howTo: "<h3>Color Toggle 🎨</h3>Use the top-right button to toggle printing colors on or off.<h3>QR Codes</h3>Always included.",
             categories: { pneu: "TYRES", vae: "E-BIKE", frein: "BRAKING", dir: "STEERING", trans: "DRIVETRAIN", acc: "ACCESSORIES", bsr: "KIDS" }
         }
     };
 
     const colors = { pneu:'#E30613', vae:'#FFD400', frein:'#FF8200', dir:'#009FE3', trans:'#93d68f', acc:'#d1d3d4', bsr:'#E4007E' };
+
+    function toggleColors() {
+        useColors = !useColors;
+        localStorage.setItem('useColors', useColors);
+        document.getElementById('colorToggle').classList.toggle('active', useColors);
+    }
 
     function changeLanguage() {
         currentLang = document.getElementById('langSelect').value;
@@ -172,7 +177,6 @@
 
     function updateInterface() {
         const t = translations[currentLang];
-        document.getElementById('txt-title').innerText = t.title;
         document.getElementById('lbl-size').innerText = t.size;
         document.getElementById('lbl-cat').innerText = t.cat;
         document.getElementById('lbl-name').innerText = t.name;
@@ -258,24 +262,21 @@
         labelQueue.forEach((item, index) => {
             const labelId = `qr-${index}`;
             const isMicro = size === 'a8';
+            const bgColor = useColors ? item.color : '#ffffff';
+            const textColor = useColors ? getContrastYIQ(item.color) : '#000000';
             
             grid.innerHTML += `
-                <div class="label" style="background-color:${item.color} !important; color:${getContrastYIQ(item.color)} !important;">
+                <div class="label" style="background-color:${bgColor} !important; color:${textColor} !important;">
                     ${isMicro ? '' : `<span class="itm-cat">${item.cat}</span>`}
                     <div class="itm-n">${item.name}</div>
-                    <div class="itm-c-container"><div class="itm-c">${item.code}</div></div>
+                    <div class="itm-c-container"><div class="itm-c" style="border-color:${textColor} !important;">${item.code}</div></div>
                     <div id="${labelId}" class="qr-wrap ${isMicro ? 'qr-micro' : 'qr-std'}"></div>
                 </div>`;
             
-            // Generate QR na toevoegen aan DOM
             setTimeout(() => {
                 new QRCode(document.getElementById(labelId), {
-                    text: item.code,
-                    width: isMicro ? 35 : s.qr,
-                    height: isMicro ? 35 : s.qr,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.L
+                    text: item.code, width: isMicro ? 35 : s.qr, height: isMicro ? 35 : s.qr,
+                    colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L
                 });
             }, 10);
         });
@@ -285,6 +286,7 @@
     }
 
     document.getElementById('langSelect').value = currentLang;
+    document.getElementById('colorToggle').classList.toggle('active', useColors);
     updateInterface();
 </script>
 </body>
