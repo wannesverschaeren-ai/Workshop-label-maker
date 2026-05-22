@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V16</title>
+    <title>WORKSHOP LABEL MAKER PRO V17</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         :root { 
@@ -25,8 +27,8 @@
         .input-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border-top: 5px solid var(--accent); margin-bottom: 20px; }
         
         .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-bottom: 15px; }
-        .cat-btn { border: 2px solid transparent; padding: 10px 5px; border-radius: 8px; font-size: 11px; font-weight: 800; text-align: center; cursor: pointer; text-transform: uppercase; transition: transform 0.1s; }
-        .cat-btn.active { border-color: #000; transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .cat-btn { border: 2px solid transparent; padding: 10px 5px; border-radius: 8px; font-size: 11px; font-weight: 800; text-align: center; cursor: pointer; text-transform: uppercase; }
+        .cat-btn.active { border-color: #000; transform: scale(1.05); }
 
         label { font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block; color: #666; }
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; margin-bottom: 12px; font-size: 16px; box-sizing: border-box; }
@@ -37,10 +39,6 @@
         
         .add-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 16px; text-transform: uppercase; cursor: pointer; }
         
-        .page-preview { display: grid; gap: 1px; width: 60px; height: 80px; background: #ddd; padding: 2px; border-radius: 4px; }
-        .slot { background: #fff; border-radius: 1px; }
-        .slot.filled { background: var(--accent); }
-
         .queue-item { background: #fff; padding: 12px; border-radius: 10px; border-left: 10px solid #ddd; margin-bottom: 8px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .queue-item input { margin-bottom: 0; padding: 8px; font-size: 14px; border: none; background: #f9f9f9; width: 100%; }
         .remove-btn { background: #fff1f1; border: none; color: var(--red); width: 32px; height: 32px; border-radius: 50%; font-weight: 700; cursor: pointer; flex-shrink: 0; }
@@ -50,21 +48,27 @@
             .container, .btn-print, header, #infoModal { display: none !important; }
             @page { size: A4 portrait; margin: 0 !important; }
             html, body { margin: 0 !important; padding: 0 !important; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            #printGrid { 
-                display: grid !important; 
-                width: 210mm; 
-                grid-template-columns: var(--print-cols); 
-                grid-template-rows: repeat(auto-fill, var(--print-height));
-                justify-content: center; /* Centreer de smallere labels op het blad */
-            }
+            #printGrid { display: grid !important; width: 210mm; grid-template-columns: var(--print-cols); grid-template-rows: repeat(auto-fill, var(--print-height)); justify-content: center; }
+            
             .label { 
-                width: var(--print-width); height: var(--print-height); display: block; position: relative; padding: 25px; box-sizing: border-box; 
+                width: var(--print-width); height: var(--print-height); display: block; position: relative; padding: 15px; box-sizing: border-box; 
                 text-transform: uppercase; border: 1pt solid #888; page-break-inside: avoid; break-inside: avoid; overflow: hidden;
             }
-            .itm-cat { font-weight: 700; font-size: 12pt; display: block; margin-bottom: 5px; opacity: 0.8; }
-            .itm-n { height: 60%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; }
-            .itm-c-container { position: absolute; bottom: 25px; right: 30px; }
-            .itm-c { background: white !important; color: #000 !important; border: 4pt solid #000; padding: 4pt 12pt; font-size: var(--font-size-code); font-weight: 900; }
+            
+            .itm-cat { font-weight: 700; font-size: 10pt; display: block; margin-bottom: 5px; opacity: 0.8; }
+            .itm-n { height: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; }
+            
+            /* QR Code Positie */
+            .qr-wrap { position: absolute; background: white; padding: 2px; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+            
+            /* Standaard QR Positie (Rechtsonder) */
+            .qr-std { bottom: 15px; right: 15px; width: var(--qr-size); height: var(--qr-size); }
+            
+            /* A8 Micro QR Positie (Rechtsboven, vervangt categorie) */
+            .qr-micro { top: 10px; right: 10px; width: 35px; height: 35px; }
+
+            .itm-c-container { position: absolute; bottom: 15px; left: 15px; }
+            .itm-c { background: white !important; color: #000 !important; border: 2pt solid #000; padding: 2pt 8pt; font-size: var(--font-size-code); font-weight: 900; }
         }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -86,21 +90,16 @@
 
 <div class="container">
     <div class="input-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <div style="flex:1; margin-right:10px;">
-                <label id="lbl-size">Formaat</label>
-                <select id="sizeSelect" onchange="renderVisualPage()" style="width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; font-size: 16px;">
-                    <option value="a5">A5 (2)</option>
-                    <option value="a6">A6 Custom (150x104)</option>
-                    <option value="a7">A7 (8)</option>
-                    <option value="a7h">A7 Slim (16)</option>
-                    <option value="a8">A8 Micro (32)</option>
-                </select>
-            </div>
-            <div id="visualPage" class="page-preview"></div>
-        </div>
+        <label id="lbl-size">Formaat</label>
+        <select id="sizeSelect" style="width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; font-size: 16px;">
+            <option value="a5">A5 (2)</option>
+            <option value="a6">A6 Custom (150x104)</option>
+            <option value="a7">A7 (8)</option>
+            <option value="a7h">A7 Slim (16)</option>
+            <option value="a8" selected>A8 Micro + QR (32)</option>
+        </select>
 
-        <label id="lbl-cat">Categorie</label>
+        <label id="lbl-cat" style="margin-top:10px;">Categorie</label>
         <div id="catGrid" class="cat-grid"></div>
         
         <label id="lbl-name">Productnaam</label>
@@ -148,17 +147,17 @@
     const translations = {
         nl: {
             title: "Atelier Labels", size: "Formaat", cat: "Categorie", name: "Productnaam", code: "Itemcode", qty: "Aantal", add: "Toevoegen", clear: "WIS ALLES", print: "Genereer Printvel", labels: "Wachtrij",
-            howTo: "<h3>A6 Custom</h3>150mm breed en 104mm hoog. Er passen er 2 op een blad (gecentreerd).<h3>Spraak</h3>Zeg 'OK' na het dicteren om direct toe te voegen.",
+            howTo: "<h3>QR-Codes</h3>Elk label krijgt nu een QR-code op basis van de itemcode.<h3>A8 Micro</h3>De categorie is hier vervangen door de QR-code om ruimte te besparen.",
             categories: { pneu: "BANDEN", vae: "E-BIKE", frein: "REMSYSTEEM", dir: "STUUR", trans: "AANDRIJVING", acc: "ACCESSOIRES", bsr: "KIDS" }
         },
         fr: {
             title: "Étiquettes Atelier", size: "Format", cat: "Catégorie", name: "Nom", code: "Code", qty: "Quantité", add: "Ajouter", clear: "EFFACER", print: "Imprimer", labels: "File",
-            howTo: "<h3>A6 Custom</h3>150mm x 104mm. 2 par feuille (centré).<h3>Vocal</h3>Dites 'OK' pour ajouter.",
+            howTo: "<h3>Codes QR</h3>Chaque étiquette a maintenant un code QR.<h3>A8 Micro</h3>La catégorie est remplacée par le code QR.",
             categories: { pneu: "PNEUS", vae: "VAE", frein: "FREINAGE", dir: "DIRECTION", trans: "TRANSMISSION", acc: "ACCESSOIRES", bsr: "ENFANTS" }
         },
         en: {
             title: "Workshop Labels", size: "Format", cat: "Category", name: "Name", code: "Code", qty: "Qty", add: "Add", clear: "CLEAR", print: "Print Sheet", labels: "Queue",
-            howTo: "<h3>A6 Custom</h3>150mm x 104mm. 2 per sheet (centered).<h3>Voice</h3>Say 'OK' to add immediately.",
+            howTo: "<h3>QR-Codes</h3>Every label now features a QR code.<h3>A8 Micro</h3>The category is replaced by the QR code to save space.",
             categories: { pneu: "TYRES", vae: "E-BIKE", frein: "BRAKING", dir: "STEERING", trans: "DRIVETRAIN", acc: "ACCESSORIES", bsr: "KIDS" }
         }
     };
@@ -239,37 +238,50 @@
         labelQueue.forEach((item, index) => {
             list.innerHTML += `<div class="queue-item" style="border-left-color: ${item.color}"><div style="flex-grow: 1;"><input type="text" value="${item.name}" onchange="labelQueue[${index}].name=this.value.toUpperCase();save();"><input type="text" value="${item.code}" onchange="labelQueue[${index}].code=this.value.toUpperCase();save();" style="margin-top:4px; font-weight:bold;"></div><button class="remove-btn" onclick="labelQueue.splice(${index},1);save();render();">✕</button></div>`;
         });
-        renderVisualPage();
     }
 
     function save() { localStorage.setItem('labelQueue', JSON.stringify(labelQueue)); }
     function clearAll() { if(confirm("Clear All?")) { labelQueue = []; save(); render(); } }
 
-    function renderVisualPage() {
-        const size = document.getElementById('sizeSelect').value, visual = document.getElementById('visualPage'), countMap = { a5:2, a6:2, a7:8, a7h:16, a8:32 };
-        visual.innerHTML = '';
-        if(size === 'a6' || size === 'a5') visual.style.gridTemplateColumns = '1fr';
-        else if(size === 'a8') visual.style.gridTemplateColumns = 'repeat(4, 1fr)';
-        else visual.style.gridTemplateColumns = 'repeat(2, 1fr)';
-        
-        for(let i=0; i<countMap[size]; i++) visual.innerHTML += `<div class="slot ${(i < labelQueue.length % (countMap[size] + 0.1)) && labelQueue.length > 0 ? 'filled' : ''}"></div>`;
-    }
-
     function doPrint() {
         const grid = document.getElementById('printGrid'), size = document.getElementById('sizeSelect').value; grid.innerHTML = '';
         const s = { 
-            a5:{w:'210mm',c:'210mm',h:'148.5mm',n:'48pt',cc:'32pt'}, 
-            a6:{w:'150mm',c:'150mm',h:'104mm',n:'32pt',cc:'22pt'}, // Custom A6
-            a7:{w:'105mm',c:'105mm 105mm',h:'74.2mm',n:'26pt',cc:'18pt'}, 
-            a7h:{w:'105mm',c:'105mm 105mm',h:'37.1mm',n:'18pt',cc:'12pt'}, 
-            a8:{w:'52.5mm',c:'52.5mm 52.5mm 52.5mm 52.5mm',h:'37.1mm',n:'12pt',cc:'9pt'} 
+            a5:{w:'210mm',c:'210mm',h:'148.5mm',n:'48pt',cc:'32pt',qr:120}, 
+            a6:{w:'150mm',c:'150mm',h:'104mm',n:'32pt',cc:'22pt',qr:80}, 
+            a7:{w:'105mm',c:'105mm 105mm',h:'74.2mm',n:'26pt',cc:'18pt',qr:60}, 
+            a7h:{w:'105mm',c:'105mm 105mm',h:'37.1mm',n:'18pt',cc:'12pt',qr:45}, 
+            a8:{w:'52.5mm',c:'52.5mm 52.5mm 52.5mm 52.5mm',h:'37.1mm',n:'12pt',cc:'9pt',qr:35} 
         }[size];
-        grid.style.setProperty('--print-cols', s.c); grid.style.setProperty('--print-height', s.h); grid.style.setProperty('--print-width', s.w); grid.style.setProperty('--font-size-name', s.n); grid.style.setProperty('--font-size-code', s.cc);
-        labelQueue.forEach(item => {
-            grid.innerHTML += `<div class="label" style="background-color:${item.color} !important; color:${getContrastYIQ(item.color)} !important;"><span class="itm-cat">${item.cat}</span><div class="itm-n">${item.name}</div><div class="itm-c-container"><div class="itm-c">${item.code}</div></div></div>`;
+        
+        grid.style.setProperty('--print-cols', s.c); grid.style.setProperty('--print-height', s.h); grid.style.setProperty('--print-width', s.w); grid.style.setProperty('--font-size-name', s.n); grid.style.setProperty('--font-size-code', s.cc); grid.style.setProperty('--qr-size', s.qr + 'px');
+
+        labelQueue.forEach((item, index) => {
+            const labelId = `qr-${index}`;
+            const isMicro = size === 'a8';
+            
+            grid.innerHTML += `
+                <div class="label" style="background-color:${item.color} !important; color:${getContrastYIQ(item.color)} !important;">
+                    ${isMicro ? '' : `<span class="itm-cat">${item.cat}</span>`}
+                    <div class="itm-n">${item.name}</div>
+                    <div class="itm-c-container"><div class="itm-c">${item.code}</div></div>
+                    <div id="${labelId}" class="qr-wrap ${isMicro ? 'qr-micro' : 'qr-std'}"></div>
+                </div>`;
+            
+            // Generate QR na toevoegen aan DOM
+            setTimeout(() => {
+                new QRCode(document.getElementById(labelId), {
+                    text: item.code,
+                    width: isMicro ? 35 : s.qr,
+                    height: isMicro ? 35 : s.qr,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+            }, 10);
         });
+        
         grid.innerHTML += `<div style="height: 1mm; width: 100%; page-break-after: always;"></div>`;
-        setTimeout(() => { window.print(); }, 250);
+        setTimeout(() => { window.print(); }, 500);
     }
 
     document.getElementById('langSelect').value = currentLang;
