@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V21</title>
+    <title>WORKSHOP LABEL MAKER PRO V22</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -50,7 +50,7 @@
             .container, .btn-print, header, #infoModal { display: none !important; }
             @page { size: A4 portrait; margin: 0 !important; }
             html, body { margin: 0 !important; padding: 0 !important; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            #printGrid { display: grid !important; width: 210mm; grid-template-columns: var(--print-cols); grid-template-rows: repeat(auto-fill, var(--print-height)); justify-content: center; }
+            #printGrid { display: grid !important; width: 210mm; grid-template-columns: var(--print-cols); grid-template-rows: repeat(auto-fill, var(--print-height)); justify-content: center; page-break-after: always !important; break-after: always !important; }
             
             .label { 
                 width: var(--print-width); height: var(--print-height); display: block; position: relative; padding: 10px; box-sizing: border-box; 
@@ -59,14 +59,12 @@
             
             .itm-cat { font-weight: 700; font-size: 10pt; display: block; margin-bottom: 2px; opacity: 0.8; }
             
-            /* Gecentreerde Naam */
             .itm-n { 
                 position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%);
                 width: 90%; height: auto; display: flex; align-items: center; justify-content: center; 
                 font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; color: inherit !important;
             }
             
-            /* HOGERE TEKSTPOSITIE SPECIFIEK VOOR A8 MICRO labels */
             .is-a8 .itm-n {
                 top: 32% !important;
             }
@@ -84,11 +82,6 @@
             }
             
             .is-a8 .itm-c-container { bottom: 6px; left: 6px; }
-        }
-
-        @media print {
-            /* Mobility Print Duplex Break Fixes */
-            #printGrid { page-break-after: always !important; break-after: always !important; }
         }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -162,7 +155,7 @@
 <script>
     let currentLang = localStorage.getItem('appLang') || 'nl';
     let labelQueue = JSON.parse(localStorage.getItem('labelQueue')) || [];
-    let useColors = JSON.parse(localStorage.getItem('useColors')) !== false;
+    let useColors = localStorage.getItem('useColors') !== 'false';
     let selectedCat = 'pneu';
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -299,3 +292,27 @@
                     ${isMicro ? '' : `<span class="itm-cat">${item.cat}</span>`}
                     <div class="itm-n">${item.name}</div>
                     <div class="itm-c-container"><div class="itm-c" style="border-color:${textColor} !important;">${item.code}</div></div>
+                    <div id="${labelId}" class="qr-wrap ${isMicro ? 'qr-micro' : 'qr-std'}"></div>
+                </div>`;
+            
+            setTimeout(() => {
+                const element = document.getElementById(labelId);
+                if (element) {
+                    new QRCode(element, {
+                        text: item.code, width: isMicro ? 32 : s.qr, height: isMicro ? 32 : s.qr,
+                        colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L
+                    });
+                }
+            }, 10);
+        });
+        
+        grid.innerHTML += `<div style="height: 1mm; width: 100%; page-break-after: always;"></div>`;
+        setTimeout(() => { window.print(); }, 500);
+    }
+
+    document.getElementById('langSelect').value = currentLang;
+    document.getElementById('colorToggle').classList.toggle('active', useColors);
+    updateInterface();
+</script>
+</body>
+</html>
