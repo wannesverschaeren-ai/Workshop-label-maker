@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V20</title>
+    <title>WORKSHOP LABEL MAKER PRO V21</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,26 +59,36 @@
             
             .itm-cat { font-weight: 700; font-size: 10pt; display: block; margin-bottom: 2px; opacity: 0.8; }
             
+            /* Gecentreerde Naam */
             .itm-n { 
                 position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%);
                 width: 90%; height: auto; display: flex; align-items: center; justify-content: center; 
                 font-size: var(--font-size-name); font-weight: 900; text-align: center; line-height: 1.1; color: inherit !important;
             }
             
+            /* HOGERE TEKSTPOSITIE SPECIFIEK VOOR A8 MICRO labels */
+            .is-a8 .itm-n {
+                top: 32% !important;
+            }
+            
             .qr-wrap { position: absolute; background: white; padding: 1px; display: flex; align-items: center; justify-content: center; border-radius: 2px; border: 0.5pt solid #eee; }
             .qr-std { bottom: 10px; right: 10px; width: var(--qr-size); height: var(--qr-size); }
             .qr-micro { bottom: 6px; right: 6px; width: 32px; height: 32px; }
 
-            /* VERGROTE ARTIKELCODE CONTAINERS */
             .itm-c-container { position: absolute; bottom: 10px; left: 10px; }
             .itm-c { 
                 background: white !important; color: #000 !important; 
-                border: 3pt solid #000; /* Dikkere omlijning */
+                border: 3pt solid #000; 
                 padding: 3pt 8pt; 
                 font-size: var(--font-size-code); font-weight: 900; letter-spacing: 0.5px;
             }
             
             .is-a8 .itm-c-container { bottom: 6px; left: 6px; }
+        }
+
+        @media print {
+            /* Mobility Print Duplex Break Fixes */
+            #printGrid { page-break-after: always !important; break-after: always !important; }
         }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -159,17 +169,17 @@
     const translations = {
         nl: {
             title: "Atelier Labels", size: "Formaat", cat: "Categorie", name: "Productnaam", code: "Itemcode", qty: "Aantal", add: "Toevoegen", clear: "WIS ALLES", print: "Genereer Printvel", labels: "Wachtrij",
-            howTo: "<h3>Invoer</h3>Druk op Enter tijdens het typen om direct toe te voegen.<h3>Grote codes</h3>De artikelcodes zijn vergroot en dikker omrand voor betere leesbaarheid.",
+            howTo: "<h3>A8 Optimalisatie</h3>De productnaam staat nu hoger op het label om witruimte te voorkomen. Handig voor korte namen.<h3>Invoer</h3>Druk op Enter om direct toe te voegen.",
             categories: { pneu: "BANDEN", vae: "E-BIKE", frein: "REMSYSTEEM", dir: "STUUR", trans: "AANDRIJVING", acc: "ACCESSOIRES", bsr: "KIDS" }
         },
         fr: {
             title: "Étiquettes Atelier", size: "Format", cat: "Catégorie", name: "Nom", code: "Code", qty: "Quantité", add: "Ajouter", clear: "EFFACER", print: "Imprimer", labels: "File",
-            howTo: "<h3>Entrée</h3>Appuyez sur Entrée pour ajouter.<h3>Grands codes</h3>Les codes d'article sont plus grands et plus visibles.",
+            howTo: "<h3>Mise en page A8</h3>Le nom est placé plus haut pour éviter l'espace vide.",
             categories: { pneu: "PNEUS", vae: "VAE", frein: "FREINAGE", dir: "DIRECTION", trans: "TRANSMISSION", acc: "ACCESSOIRES", bsr: "ENFANTS" }
         },
         en: {
             title: "Workshop Labels", size: "Format", cat: "Category", name: "Name", code: "Code", qty: "Qty", add: "Add", clear: "CLEAR", print: "Print Sheet", labels: "Queue",
-            howTo: "<h3>Input</h3>Press Enter while typing to add quickly.<h3>Large codes</h3>Item codes are enlarged and bolder for high visibility.",
+            howTo: "<h3>A8 Optimization</h3>Product name shifted upwards to reduce empty space at the top.",
             categories: { pneu: "TYRES", vae: "E-BIKE", frein: "BRAKING", dir: "STEERING", trans: "DRIVETRAIN", acc: "ACCESSORIES", bsr: "KIDS" }
         }
     };
@@ -260,7 +270,6 @@
     function save() { localStorage.setItem('labelQueue', JSON.stringify(labelQueue)); }
     function clearAll() { if(confirm("Clear All?")) { labelQueue = []; save(); render(); } }
 
-    // Sneltoets Enter koppelen aan toevoegen
     document.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             addToQueue();
@@ -269,7 +278,6 @@
 
     function doPrint() {
         const grid = document.getElementById('printGrid'), size = document.getElementById('sizeSelect').value; grid.innerHTML = '';
-        // VERGROTE FONT-SIZES CODE (cc)
         const s = { 
             a5:{w:'210mm',c:'210mm',h:'148.5mm',n:'48pt',cc:'38pt',qr:100}, 
             a6:{w:'150mm',c:'150mm',h:'104mm',n:'32pt',cc:'26pt',qr:70}, 
@@ -287,28 +295,7 @@
             const textColor = useColors ? getContrastYIQ(item.color) : '#000000';
             
             grid.innerHTML += `
-                <div class="label" style="background-color:${bgColor} !important; color:${textColor} !important;">
+                <div class="label ${isMicro ? 'is-a8' : ''}" style="background-color:${bgColor} !important; color:${textColor} !important;">
                     ${isMicro ? '' : `<span class="itm-cat">${item.cat}</span>`}
                     <div class="itm-n">${item.name}</div>
                     <div class="itm-c-container"><div class="itm-c" style="border-color:${textColor} !important;">${item.code}</div></div>
-                    <div id="${labelId}" class="qr-wrap ${isMicro ? 'qr-micro' : 'qr-std'}"></div>
-                </div>`;
-            
-            setTimeout(() => {
-                new QRCode(document.getElementById(labelId), {
-                    text: item.code, width: isMicro ? 32 : s.qr, height: isMicro ? 32 : s.qr,
-                    colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L
-                });
-            }, 10);
-        });
-        
-        grid.innerHTML += `<div style="height: 1mm; width: 100%; page-break-after: always;"></div>`;
-        setTimeout(() => { window.print(); }, 500);
-    }
-
-    document.getElementById('langSelect').value = currentLang;
-    document.getElementById('colorToggle').classList.toggle('active', useColors);
-    updateInterface();
-</script>
-</body>
-</html>
