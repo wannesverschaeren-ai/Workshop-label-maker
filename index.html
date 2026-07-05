@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V23</title>
+    <title>WORKSHOP LABEL MAKER PRO V24</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,6 +35,9 @@
         label { font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block; color: #666; }
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; margin-bottom: 12px; font-size: 16px; box-sizing: border-box; }
         
+        /* Forceert visueel hoofdletters in het invoerveld */
+        #prodName { text-transform: uppercase; }
+
         .input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         .mic-btn { background: #f0f2f5; border: none; border-radius: 12px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; flex-shrink: 0; }
         .mic-btn.listening { background: var(--red); color: white; animation: pulse 1.2s infinite; }
@@ -55,13 +58,12 @@
             @page { size: A4 portrait; margin: 0 !important; }
             html, body { margin: 0 !important; padding: 0 !important; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
-            /* PRINTMArGES: Zorgt dat het grid loskomt van de randen van het blad */
             #printGrid { 
                 display: grid !important; 
                 width: 210mm; 
                 height: 297mm;
                 box-sizing: border-box;
-                padding: 6mm 4mm !important; /* Veiligheidsmarge boven/onder en links/rechts */
+                padding: 6mm 4mm !important; 
                 grid-template-columns: var(--print-cols); 
                 grid-template-rows: repeat(auto-fill, var(--print-height)); 
                 justify-content: center; 
@@ -140,13 +142,13 @@
         
         <label id="lbl-name">Productnaam</label>
         <div class="input-wrapper">
-            <input type="text" id="prodName" placeholder="..." autocomplete="off">
+            <input type="text" id="prodName" placeholder="..." autocomplete="off" oninput="this.value = this.value.toUpperCase()">
             <button class="mic-btn" onclick="startSpeech('prodName', 'name')" id="mic-n">🎤</button>
         </div>
         
         <label id="lbl-code">Itemcode</label>
         <div class="input-wrapper">
-            <input type="text" id="prodCode" placeholder="..." autocomplete="off">
+            <input type="text" id="prodCode" placeholder="..." autocomplete="off" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             <button class="mic-btn" onclick="startSpeech('prodCode', 'code')" id="mic-c">🔢</button>
         </div>
 
@@ -184,17 +186,17 @@
     const translations = {
         nl: {
             title: "Atelier Labels", size: "Formaat", cat: "Categorie", name: "Productnaam", code: "Itemcode", qty: "Aantal", add: "Toevoegen", clear: "WIS ALLES", print: "Genereer Printvel", labels: "Wachtrij",
-            howTo: "<h3>Printmarges 🖨️</h3>Er zijn veiligheidsmarges toegevoegd om te voorkomen dat randen afvallen. Handig bij printers die dicht op de rand snijden.",
+            howTo: "<h3>Slim Toetsenbord ⌨️</h3>De productnaam staat altijd in hoofdletters. De itemcode accepteert alleen cijfers en opent direct het numerieke toetsenbord.",
             categories: { pneu: "BANDEN", vae: "E-BIKE", frein: "REMSYSTEEM", dir: "STUUR", trans: "AANDRIJVING", acc: "ACCESSOIRES", bsr: "KIDS" }
         },
         fr: {
             title: "Étiquettes Atelier", size: "Format", cat: "Catégorie", name: "Nom", code: "Code", qty: "Quantité", add: "Ajouter", clear: "EFFACER", print: "Imprimer", labels: "File",
-            howTo: "<h3>Marges d'impression 🖨️</h3>Des marges de sécurité ont été ajoutées pour éviter que les bords ne soient coupés.",
+            howTo: "<h3>Clavier Intelligent ⌨️</h3>Le nom est toujours en majuscules. Le code n'accepte que les chiffres.",
             categories: { pneu: "PNEUS", vae: "VAE", frein: "FREINAGE", dir: "DIRECTION", trans: "TRANSMISSION", acc: "ACCESSOIRES", bsr: "ENFANTS" }
         },
         en: {
             title: "Workshop Labels", size: "Format", cat: "Category", name: "Name", code: "Code", qty: "Qty", add: "Add", clear: "CLEAR", print: "Print Sheet", labels: "Queue",
-            howTo: "<h3>Print Marges 🖨️</h3>Safety margins have been added to prevent borders from being cut off by the printer.",
+            howTo: "<h3>Smart Keyboard ⌨️</h3>Product name forces uppercase. Item code opens numeric pad and blocks letters.",
             categories: { pneu: "TYRES", vae: "E-BIKE", frein: "BRAKING", dir: "STEERING", trans: "DRIVETRAIN", acc: "ACCESSORIES", bsr: "KIDS" }
         }
     };
@@ -254,6 +256,7 @@
         rec.onstart = () => btn.classList.add('listening');
         rec.onresult = (e) => {
             let res = e.results[0][0].transcript.toUpperCase();
+            if(type === 'code') res = res.replace(/[^0-9]/g, ''); // Extra spraak-filter voor cijfers
             if(res.includes("OK")) { addToQueue(); return; }
             document.getElementById(inputId).value = res;
         };
@@ -278,7 +281,7 @@
         document.getElementById('counter').innerText = `${translations[currentLang].labels}: ${labelQueue.length}`;
         list.innerHTML = '';
         labelQueue.forEach((item, index) => {
-            list.innerHTML += `<div class="queue-item" style="border-left-color: ${item.color}"><div style="flex-grow: 1;"><input type="text" value="${item.name}" onchange="labelQueue[${index}].name=this.value.toUpperCase();save();"><input type="text" value="${item.code}" onchange="labelQueue[${index}].code=this.value.toUpperCase();save();" style="margin-top:4px; font-weight:bold;"></div><button class="remove-btn" onclick="labelQueue.splice(${index},1);save();render();">✕</button></div>`;
+            list.innerHTML += `<div class="queue-item" style="border-left-color: ${item.color}"><div style="flex-grow: 1;"><input type="text" value="${item.name}" onchange="labelQueue[${index}].name=this.value.toUpperCase();save();"><input type="text" value="${item.code}" onchange="labelQueue[${index}].code=this.value.replace(/[^0-9]/g, '');save();render();" style="margin-top:4px; font-weight:bold;"></div><button class="remove-btn" onclick="labelQueue.splice(${index},1);save();render();">✕</button></div>`;
         });
         renderVisualPage();
     }
@@ -305,7 +308,6 @@
     function doPrint() {
         const grid = document.getElementById('printGrid'), size = document.getElementById('sizeSelect').value; grid.innerHTML = '';
         
-        // Hoogte en breedte marges compacter berekend om binnen printbare zone te blijven (A4 = 210 x 297)
         const s = { 
             a5:{w:'200mm',c:'200mm',h:'140mm',n:'48pt',cc:'38pt',qr:100}, 
             a6:{w:'150mm',c:'150mm',h:'104mm',n:'32pt',cc:'26pt',qr:70}, 
