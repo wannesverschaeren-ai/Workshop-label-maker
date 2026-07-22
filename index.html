@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V27</title>
+    <title>WORKSHOP LABEL MAKER PRO V28</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -185,17 +185,17 @@
     const translations = {
         nl: {
             title: "Atelier Labels", size: "Formaat", cat: "Categorie", name: "Productnaam", code: "Itemcode", qty: "Aantal", add: "Toevoegen", clear: "WIS ALLES", print: "Genereer Printvel", labels: "Wachtrij",
-            howTo: "<h3>Atelier Woordenboek 🚲</h3>Vaktaal (zoals Shimano, Sram, 11V, inch, plus) wordt automatisch gecorrigeerd tijdens het inspreken.",
+            howTo: "<h3>Remblok-Fix 🛑</h3>Woorden zoals 'remblok', 'rem blokken' en 'remblokken' worden nu gegarandeerd correct verwerkt en omgezet.",
             categories: { pneu: "BANDEN", vae: "E-BIKE", frein: "REMSYSTEEM", dir: "STUUR", trans: "AANDRIJVING", acc: "ACCESSOIRES", bsr: "KIDS" }
         },
         fr: {
             title: "Étiquettes Atelier", size: "Format", cat: "Catégorie", name: "Nom", code: "Code", qty: "Quantité", add: "Ajouter", clear: "EFFACER", print: "Imprimer", labels: "File",
-            howTo: "<h3>Dictionnaire Atelier 🚲</h3>Les termes techniques sont corrigés automatiquement lors de la saisie vocale.",
+            howTo: "<h3>Fix Plaquettes 🛑</h3>Les mots comme 'remblok' et 'plaquettes de frein' sont traités correctement.",
             categories: { pneu: "PNEUS", vae: "VAE", frein: "FREINAGE", dir: "DIRECTION", trans: "TRANSMISSION", acc: "ACCESSOIRES", bsr: "ENFANTS" }
         },
         en: {
             title: "Workshop Labels", size: "Format", cat: "Category", name: "Name", code: "Code", qty: "Qty", add: "Add", clear: "CLEAR", print: "Print Sheet", labels: "Queue",
-            howTo: "<h3>Workshop Dictionary 🚲</h3>Technical terms (e.g. Shimano, Sram, 11V, inch, plus) are auto-corrected.",
+            howTo: "<h3>Brake Pad Fix 🛑</h3>Words like 'remblok' and 'brake pads' are now reliably captured and processed.",
             categories: { pneu: "TYRES", vae: "E-BIKE", frein: "BRAKING", dir: "STEERING", trans: "DRIVETRAIN", acc: "ACCESSORIES", bsr: "KIDS" }
         }
     };
@@ -215,9 +215,16 @@
         input.setSelectionRange(Math.max(0, start - diff), Math.max(0, start - diff));
     }
 
-    /* UITGEBREID ATELIER WOORDENBOEK FOUTEN-CORRECTIE */
+    /* V28: EXTRA STEVIGE SPRAAK-CORRECTIE VOOR REMBLOKKEN EN SAMENGESTELDE WOORDEN */
     function processVoiceText(text) {
-        let res = text.toUpperCase();
+        if(!text) return "";
+        let res = text.trim().toUpperCase();
+        
+        // Specifieke 'Remblok' correctie voor losse/gekoppelde woorden
+        res = res.replace(/\bREM BLOK\b/g, 'REMBLOK');
+        res = res.replace(/\bREM BLOKKEN\b/g, 'REMBLOKKEN');
+        res = res.replace(/\bREMSOEN\b/g, 'REMBLOK');
+        res = res.replace(/\bBRAKE PADS\b/g, 'REMBLOKKEN');
         
         // Symbolen
         res = res.replace(/\bPLUS\b/g, '+');
@@ -228,7 +235,7 @@
         res = res.replace(/\bEN\b/g, '&');
         res = res.replace(/\bINCH\b/g, '"');
         
-        // Merken & Woordenboek
+        // Merken
         res = res.replace(/\bSCHRAM\b/g, 'SRAM');
         res = res.replace(/\bSTRAM\b/g, 'SRAM');
         res = res.replace(/\bCHIMANO\b/g, 'SHIMANO');
@@ -304,13 +311,15 @@
         };
 
         rec.onresult = (e) => {
-            let rawText = e.results[0][0].transcript;
-            let res = processVoiceText(rawText);
-            
-            if(type === 'code') res = res.replace(/[^0-9]/g, '');
-            if(res.includes("OK")) { addToQueue(); return; }
-            
-            document.getElementById(inputId).value = res;
+            if (e.results && e.results[0] && e.results[0][0]) {
+                let rawText = e.results[0][0].transcript;
+                let res = processVoiceText(rawText);
+                
+                if(type === 'code') res = res.replace(/[^0-9]/g, '');
+                if(res.includes("OK")) { addToQueue(); return; }
+                
+                document.getElementById(inputId).value = res;
+            }
         };
 
         rec.onerror = (e) => {
