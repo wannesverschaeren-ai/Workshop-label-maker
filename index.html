@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V26</title>
+    <title>WORKSHOP LABEL MAKER PRO V27</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,14 +141,12 @@
         
         <label id="lbl-name">Productnaam</label>
         <div class="input-wrapper">
-            <!-- formatUpper behoudt de cursorpositie bij handmatige bewerkingen -->
             <input type="text" id="prodName" placeholder="..." autocomplete="off" oninput="formatUpper(this)">
             <button class="mic-btn" onclick="startSpeech('prodName', 'name')" id="mic-n">🎤</button>
         </div>
         
         <label id="lbl-code">Itemcode</label>
         <div class="input-wrapper">
-            <!-- formatNumeric behoudt eveneens de cursorpositie en filtert alleen op cijfers -->
             <input type="text" id="prodCode" placeholder="..." autocomplete="off" inputmode="numeric" pattern="[0-9]*" oninput="formatNumeric(this)">
             <button class="mic-btn" onclick="startSpeech('prodCode', 'code')" id="mic-c">🔢</button>
         </div>
@@ -187,49 +185,58 @@
     const translations = {
         nl: {
             title: "Atelier Labels", size: "Formaat", cat: "Categorie", name: "Productnaam", code: "Itemcode", qty: "Aantal", add: "Toevoegen", clear: "WIS ALLES", print: "Genereer Printvel", labels: "Wachtrij",
-            howTo: "<h3>Geen Cursor-Springen ✏️</h3>Typen en corrigeren werkt nu vloeiend zonder dat de cursor verspringt.<h3>Slimme Spraak 🎤</h3>Gesproken woorden zoals 'plus' worden automatisch omgezet naar '+'.",
+            howTo: "<h3>Atelier Woordenboek 🚲</h3>Vaktaal (zoals Shimano, Sram, 11V, inch, plus) wordt automatisch gecorrigeerd tijdens het inspreken.",
             categories: { pneu: "BANDEN", vae: "E-BIKE", frein: "REMSYSTEEM", dir: "STUUR", trans: "AANDRIJVING", acc: "ACCESSOIRES", bsr: "KIDS" }
         },
         fr: {
             title: "Étiquettes Atelier", size: "Format", cat: "Catégorie", name: "Nom", code: "Code", qty: "Quantité", add: "Ajouter", clear: "EFFACER", print: "Imprimer", labels: "File",
-            howTo: "<h3>Saisie fluide ✏️</h3>Le curseur ne saute plus lors de la correction. Le mot 'plus' est converti en '+'.",
+            howTo: "<h3>Dictionnaire Atelier 🚲</h3>Les termes techniques sont corrigés automatiquement lors de la saisie vocale.",
             categories: { pneu: "PNEUS", vae: "VAE", frein: "FREINAGE", dir: "DIRECTION", trans: "TRANSMISSION", acc: "ACCESSOIRES", bsr: "ENFANTS" }
         },
         en: {
             title: "Workshop Labels", size: "Format", cat: "Category", name: "Name", code: "Code", qty: "Qty", add: "Add", clear: "CLEAR", print: "Print Sheet", labels: "Queue",
-            howTo: "<h3>Smooth Typing ✏️</h3>Cursor no longer jumps when editing text. Spoken word 'plus' is converted to '+'.",
+            howTo: "<h3>Workshop Dictionary 🚲</h3>Technical terms (e.g. Shimano, Sram, 11V, inch, plus) are auto-corrected.",
             categories: { pneu: "TYRES", vae: "E-BIKE", frein: "BRAKING", dir: "STEERING", trans: "DRIVETRAIN", acc: "ACCESSORIES", bsr: "KIDS" }
         }
     };
 
     const colors = { pneu:'#E30613', vae:'#FFD400', frein:'#FF8200', dir:'#009FE3', trans:'#93d68f', acc:'#d1d3d4', bsr:'#E4007E' };
 
-    /* HELPER FUNCTIES OM CURSORPOSITIE TE BEWAREN BIJ HET TYPEN */
     function formatUpper(input) {
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
+        const start = input.selectionStart; const end = input.selectionEnd;
         input.value = input.value.toUpperCase();
         input.setSelectionRange(start, end);
     }
 
     function formatNumeric(input) {
-        const start = input.selectionStart;
-        const origLen = input.value.length;
+        const start = input.selectionStart; const origLen = input.value.length;
         input.value = input.value.replace(/[^0-9]/g, '');
-        const newLen = input.value.length;
-        const diff = origLen - newLen;
+        const diff = origLen - input.value.length;
         input.setSelectionRange(Math.max(0, start - diff), Math.max(0, start - diff));
     }
 
-    /* GESPROKEN TEKST OMZETTEN NAAR SYMBOLEN */
+    /* UITGEBREID ATELIER WOORDENBOEK FOUTEN-CORRECTIE */
     function processVoiceText(text) {
         let res = text.toUpperCase();
+        
+        // Symbolen
         res = res.replace(/\bPLUS\b/g, '+');
         res = res.replace(/\bMIN\b/g, '-');
         res = res.replace(/\bMAAL\b/g, 'X');
         res = res.replace(/\bPROCENT\b/g, '%');
         res = res.replace(/\bPERCENT\b/g, '%');
         res = res.replace(/\bEN\b/g, '&');
+        res = res.replace(/\bINCH\b/g, '"');
+        
+        // Merken & Woordenboek
+        res = res.replace(/\bSCHRAM\b/g, 'SRAM');
+        res = res.replace(/\bSTRAM\b/g, 'SRAM');
+        res = res.replace(/\bCHIMANO\b/g, 'SHIMANO');
+        res = res.replace(/\bSIMANO\b/g, 'SHIMANO');
+        res = res.replace(/\bSPEED\b/g, 'V');
+        res = res.replace(/\bVERSNELLING\b/g, 'V');
+        res = res.replace(/\bVERSNELLINGEN\b/g, 'V');
+        
         return res;
     }
 
