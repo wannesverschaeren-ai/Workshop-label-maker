@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WORKSHOP LABEL MAKER PRO V24</title>
+    <title>WORKSHOP LABEL MAKER PRO V26</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,6 @@
         label { font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block; color: #666; }
         input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-weight: 700; margin-bottom: 12px; font-size: 16px; box-sizing: border-box; }
         
-        /* Forceert visueel hoofdletters in het invoerveld */
         #prodName { text-transform: uppercase; }
 
         .input-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
@@ -142,13 +141,15 @@
         
         <label id="lbl-name">Productnaam</label>
         <div class="input-wrapper">
-            <input type="text" id="prodName" placeholder="..." autocomplete="off" oninput="this.value = this.value.toUpperCase()">
+            <!-- formatUpper behoudt de cursorpositie bij handmatige bewerkingen -->
+            <input type="text" id="prodName" placeholder="..." autocomplete="off" oninput="formatUpper(this)">
             <button class="mic-btn" onclick="startSpeech('prodName', 'name')" id="mic-n">🎤</button>
         </div>
         
         <label id="lbl-code">Itemcode</label>
         <div class="input-wrapper">
-            <input type="text" id="prodCode" placeholder="..." autocomplete="off" inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <!-- formatNumeric behoudt eveneens de cursorpositie en filtert alleen op cijfers -->
+            <input type="text" id="prodCode" placeholder="..." autocomplete="off" inputmode="numeric" pattern="[0-9]*" oninput="formatNumeric(this)">
             <button class="mic-btn" onclick="startSpeech('prodCode', 'code')" id="mic-c">🔢</button>
         </div>
 
@@ -186,22 +187,51 @@
     const translations = {
         nl: {
             title: "Atelier Labels", size: "Formaat", cat: "Categorie", name: "Productnaam", code: "Itemcode", qty: "Aantal", add: "Toevoegen", clear: "WIS ALLES", print: "Genereer Printvel", labels: "Wachtrij",
-            howTo: "<h3>Slim Toetsenbord ⌨️</h3>De productnaam staat altijd in hoofdletters. De itemcode accepteert alleen cijfers en opent direct het numerieke toetsenbord.",
+            howTo: "<h3>Geen Cursor-Springen ✏️</h3>Typen en corrigeren werkt nu vloeiend zonder dat de cursor verspringt.<h3>Slimme Spraak 🎤</h3>Gesproken woorden zoals 'plus' worden automatisch omgezet naar '+'.",
             categories: { pneu: "BANDEN", vae: "E-BIKE", frein: "REMSYSTEEM", dir: "STUUR", trans: "AANDRIJVING", acc: "ACCESSOIRES", bsr: "KIDS" }
         },
         fr: {
             title: "Étiquettes Atelier", size: "Format", cat: "Catégorie", name: "Nom", code: "Code", qty: "Quantité", add: "Ajouter", clear: "EFFACER", print: "Imprimer", labels: "File",
-            howTo: "<h3>Clavier Intelligent ⌨️</h3>Le nom est toujours en majuscules. Le code n'accepte que les chiffres.",
+            howTo: "<h3>Saisie fluide ✏️</h3>Le curseur ne saute plus lors de la correction. Le mot 'plus' est converti en '+'.",
             categories: { pneu: "PNEUS", vae: "VAE", frein: "FREINAGE", dir: "DIRECTION", trans: "TRANSMISSION", acc: "ACCESSOIRES", bsr: "ENFANTS" }
         },
         en: {
             title: "Workshop Labels", size: "Format", cat: "Category", name: "Name", code: "Code", qty: "Qty", add: "Add", clear: "CLEAR", print: "Print Sheet", labels: "Queue",
-            howTo: "<h3>Smart Keyboard ⌨️</h3>Product name forces uppercase. Item code opens numeric pad and blocks letters.",
+            howTo: "<h3>Smooth Typing ✏️</h3>Cursor no longer jumps when editing text. Spoken word 'plus' is converted to '+'.",
             categories: { pneu: "TYRES", vae: "E-BIKE", frein: "BRAKING", dir: "STEERING", trans: "DRIVETRAIN", acc: "ACCESSORIES", bsr: "KIDS" }
         }
     };
 
     const colors = { pneu:'#E30613', vae:'#FFD400', frein:'#FF8200', dir:'#009FE3', trans:'#93d68f', acc:'#d1d3d4', bsr:'#E4007E' };
+
+    /* HELPER FUNCTIES OM CURSORPOSITIE TE BEWAREN BIJ HET TYPEN */
+    function formatUpper(input) {
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        input.value = input.value.toUpperCase();
+        input.setSelectionRange(start, end);
+    }
+
+    function formatNumeric(input) {
+        const start = input.selectionStart;
+        const origLen = input.value.length;
+        input.value = input.value.replace(/[^0-9]/g, '');
+        const newLen = input.value.length;
+        const diff = origLen - newLen;
+        input.setSelectionRange(Math.max(0, start - diff), Math.max(0, start - diff));
+    }
+
+    /* GESPROKEN TEKST OMZETTEN NAAR SYMBOLEN */
+    function processVoiceText(text) {
+        let res = text.toUpperCase();
+        res = res.replace(/\bPLUS\b/g, '+');
+        res = res.replace(/\bMIN\b/g, '-');
+        res = res.replace(/\bMAAL\b/g, 'X');
+        res = res.replace(/\bPROCENT\b/g, '%');
+        res = res.replace(/\bPERCENT\b/g, '%');
+        res = res.replace(/\bEN\b/g, '&');
+        return res;
+    }
 
     function toggleColors() {
         useColors = !useColors;
@@ -250,18 +280,50 @@
     }
 
     function startSpeech(inputId, type) {
-        if (!SpeechRecognition) return alert("Browser error");
-        const rec = new SpeechRecognition(); rec.lang = currentLang === 'nl' ? 'nl-NL' : (currentLang === 'fr' ? 'fr-FR' : 'en-US');
+        if (!SpeechRecognition) {
+            alert("Spraakherkenning wordt niet ondersteund door deze browser. Gebruik Google Chrome of Microsoft Edge.");
+            return;
+        }
+
+        const rec = new SpeechRecognition(); 
+        rec.lang = currentLang === 'nl' ? 'nl-NL' : (currentLang === 'fr' ? 'fr-FR' : 'en-US');
+        rec.continuous = false;
+        rec.interimResults = false;
+
         const btn = document.getElementById(type === 'name' ? 'mic-n' : 'mic-c');
-        rec.onstart = () => btn.classList.add('listening');
+        
+        rec.onstart = () => {
+            btn.classList.add('listening');
+        };
+
         rec.onresult = (e) => {
-            let res = e.results[0][0].transcript.toUpperCase();
-            if(type === 'code') res = res.replace(/[^0-9]/g, ''); // Extra spraak-filter voor cijfers
+            let rawText = e.results[0][0].transcript;
+            let res = processVoiceText(rawText);
+            
+            if(type === 'code') res = res.replace(/[^0-9]/g, '');
             if(res.includes("OK")) { addToQueue(); return; }
+            
             document.getElementById(inputId).value = res;
         };
-        rec.onend = () => btn.classList.remove('listening');
-        rec.start();
+
+        rec.onerror = (e) => {
+            btn.classList.remove('listening');
+            if (e.error === 'not-allowed') {
+                alert("Microfoontoegang is geweigerd. Controleer de instellingen van je browser bij het slotje in de adresbalk.");
+            } else if (e.error !== 'no-speech') {
+                alert("Fout bij spraakherkenning: " + e.error);
+            }
+        };
+
+        rec.onend = () => {
+            btn.classList.remove('listening');
+        };
+
+        try {
+            rec.start();
+        } catch (err) {
+            alert("Kon de microfoon niet starten: " + err.message);
+        }
     }
 
     function addToQueue() {
